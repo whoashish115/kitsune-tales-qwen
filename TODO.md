@@ -2,7 +2,7 @@
 
 - [x] core package: taxonomy, prompt format, filters, metrics
 - [x] data pipeline + sft
-- [ ] frozen eval policy suite
+- [x] frozen eval policy suite
 - [ ] cloud gpu jobs with a budget guard
 - [ ] dpo + pairwise judge
 - [ ] base model bake-off
