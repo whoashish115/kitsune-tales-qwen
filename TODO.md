@@ -3,7 +3,7 @@
 - [x] core package: taxonomy, prompt format, filters, metrics
 - [x] data pipeline + sft
 - [x] frozen eval policy suite
-- [ ] cloud gpu jobs with a budget guard
+- [x] cloud gpu jobs with a budget guard
 - [ ] dpo + pairwise judge
 - [ ] base model bake-off
 - [ ] full data generation
