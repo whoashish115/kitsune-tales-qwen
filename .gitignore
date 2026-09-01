@@ -1,0 +1,76 @@
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+_netrc
+.netrc
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# ML artifacts — never commit weights or large data
+checkpoints/
+outputs/
+runs/
+wandb/
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.gguf
+*.onnx
+adapter_model*
+
+# Data dumps (the processed dataset lives in W&B / HF, not in git)
+data/raw/
+data/interim/
+data/processed/
+data/*.jsonl
+data/*.jsonl.gz
+data/*.parquet
+!data/test_prompts.jsonl
+!data/test_prompts.sha256
+!data/eval_policy_prompts.jsonl
+!data/test_set.jsonl
+!data/test_prompts_en.jsonl
+!data/test_prompts_en.sha256
+!data/eval_policy_prompts_en.jsonl
+!data/test_set_en.jsonl
+!data/test_set_en.sha256
+# Bulk data and weights stay out of git: they live on the Modal volume and the Hugging Face Hub
+data/processed_*/
+data/dpo/
+data/adapters/
+
+# Eval generations are committed gzipped (reports/generations/*.jsonl.gz, a few MB) so that
+# `make eval` can rebuild every table from a fresh clone. Scratch output goes here instead:
+reports/scratch/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+reports/scratch_*.log
+build/
+!data/test_set.sha256
+
+# Local run state and console logs
+logs/
+reports/orchestrator/

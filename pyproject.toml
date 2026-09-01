@@ -1,0 +1,88 @@
+[project]
+name = "kitsune"
+version = "0.1.0"
+description = "Kitsune: a small open model fine-tuned to write original, general-audience Japanese fantasy light-novel fiction."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Ashish Kumar" }]
+requires-python = ">=3.11,<3.14"
+keywords = ["llm", "lora", "japanese", "fantasy", "light-novel", "creative-writing"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Natural Language :: Japanese",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+# Lightweight, CPU-only runtime deps: data pipeline, filters, metrics, report builder, Modal client.
+dependencies = [
+    "pydantic==2.13.5",
+    "pyyaml==6.0.3",
+    "numpy==2.3.5",
+    "datasketch==2.0.0",
+    "matplotlib==3.11.2",
+    "wandb==0.30.0",
+    "modal==1.6.0",
+    "huggingface-hub==1.33.0",
+    # Tokenizer-only use on CPU (chat-template round trips, token counts). No torch needed.
+    "transformers==5.17.0",
+    "jinja2==3.1.6",
+]
+
+[project.optional-dependencies]
+# Everything that runs inside the Modal GPU image. Linux-only; installed there, never on the dev machine.
+# Keep in sync with src/versions.py (checked by tests/test_versions.py).
+gpu = [
+    "torch==2.13.0; sys_platform == 'linux'",
+    "vllm==0.30.0; sys_platform == 'linux'",
+    "trl==1.14.1; sys_platform == 'linux'",
+    "peft==0.21.1; sys_platform == 'linux'",
+    "accelerate==1.15.0; sys_platform == 'linux'",
+    "datasets==5.0.1; sys_platform == 'linux'",
+    "flash-linear-attention==0.5.2; sys_platform == 'linux'",
+    "lm-eval==0.4.13; sys_platform == 'linux'",
+]
+
+[dependency-groups]
+dev = [
+    "pytest==9.1.1",
+    "ruff==0.16.9",
+    "mypy==2.3.1",
+    "pre-commit==4.6.2",
+    "types-pyyaml",
+]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+# The package source sits directly in src/ and imports as `kitsune`.
+[tool.setuptools]
+package-dir = { "kitsune" = "src" }
+packages = ["kitsune", "kitsune.data", "kitsune.eval", "kitsune.train"]
+
+[tool.uv]
+default-groups = ["dev"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+# Japanese text legitimately contains full-width characters that look ambiguous to RUF001-003.
+ignore = ["RUF001", "RUF002", "RUF003", "E501"]  # E501: the formatter owns line length; CJK lexicons are wide
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "network: needs to download a tokenizer from the Hugging Face Hub (skipped offline)",
+]
+addopts = "-ra"
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+warn_unused_ignores = true
+files = ["src"]
+exclude = ["src/modal_app.py", "src/train/", "src/smoke.py"]  # GPU-only code paths
