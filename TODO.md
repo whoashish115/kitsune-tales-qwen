@@ -1,6 +1,6 @@
 # todo
 
-- [ ] core package: taxonomy, prompt format, filters, metrics
+- [x] core package: taxonomy, prompt format, filters, metrics
 - [ ] data pipeline + sft
 - [ ] frozen eval policy suite
 - [ ] cloud gpu jobs with a budget guard
