@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use Kitsune, please cite it as below."
+title: "Kitsune-Tales-E4B: a small open model for original Japanese fantasy light-novel fiction"
+type: software
+authors:
+  - family-names: Kumar
+    given-names: Ashish
+license: Apache-2.0
+version: 0.1.0
+date-released: 2026-10-01
+keywords:
+  - large language models
+  - LoRA
+  - Japanese
+  - creative writing
+  - light novel
+references:
+  - type: software
+    title: "Gemma 4"
+    authors:
+      - name: "Google"

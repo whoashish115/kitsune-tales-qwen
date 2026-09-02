@@ -31,3 +31,17 @@ From `modal billing rates` (September 2026). CPU and memory are billed on top of
 | CPU | $0.0473 / core / h |
 | Memory | $0.008 / GiB / h |
 | Volumes | $0.09 / GiB / month |
+## Efficiency choices
+
+- **Cost per example, not per hour.** The H100 trains about 4× more examples per hour than an L40S at 1.7× the price,
+  so every SFT run uses an H100 (D-022). Generation and judging use vLLM on one H100.
+- **No GPU time on downloads.** Base, generator and judge weights are cached on a Modal volume by CPU-only jobs before
+  any GPU job starts.
+- **One epoch at batch 16**, sized from the pilot's measured throughput (D-021).
+- **Explicit timeouts and resumable jobs.** Training resumes from checkpoints only when its data fingerprint matches
+  (D-023); generation and judging skip finished shards.
+## Release upload
+
+The merged weights, the English LoRA and the GGUF files (about 59 GB) are copied from the Modal volume to the Hugging
+Face repos by a CPU-only job (`src/modal_hub.py`: 4 cores, 8 GiB, estimated 0.5 h, about $0.16 with the guard factor).
+`upload_folder` skips files the Hub already has, so a rerun is cheap. Measured: about 3 minutes, $0.013.

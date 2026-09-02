@@ -1,0 +1,6 @@
+# Hugging Face Space (free CPU). Prebuilt CPU wheels for llama-cpp-python avoid a long compile.
+--extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
+llama-cpp-python==0.3.35
+gradio==6.28.0
+huggingface-hub==1.33.0
+pydantic==2.13.5

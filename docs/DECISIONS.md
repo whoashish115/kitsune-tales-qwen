@@ -102,6 +102,12 @@ of a test title are excluded. Validation is 3 % of kept examples, stratified by 
 Packing two sequences into one row with reset `position_ids` changes the logits of the second sequence by up to 14.5
 (repeat-pass noise 0.0) for Gemma 4 E4B, because attention is not masked by position ids in this stack. Packing would
 leak context across examples, so training uses `packing: false` with length-grouped batches.
+## D-014 / D-025 / D-028: Compute limits and the budget guard
+
+Two Modal accounts with fixed credit. Before every launch, `kitsune.cost.guard` compares the account's hard stop
+against max(Modal's billed total, ledger including running jobs' estimates) + 1.25 × the new job's estimate, and
+refuses to launch past it. Billing was measured at 0.96–1.12 × the ledger, so recorded spend counts at face value.
+Summary in [BUDGET.md](BUDGET.md).
 ## D-016: Stack checks before spending
 
 - Merges are done in fp32 and rounded once to bf16; the check reports teacher-forced top-1 agreement and mean KL
@@ -118,3 +124,27 @@ leak context across examples, so training uses `packing: false` with length-grou
 - Manual inspection of 100 records added a title filter and a CP932 kanji check, and removed two lexicon false
   positives (a blocklisted name matching inside longer names, and a meta-text pattern matching ordinary prose).
 - Final Japanese data: 10,257 kept of 15,320 generations, 10,090 train / 302 validation.
+## D-023: Training safeguards and translations
+
+Every run writes a fingerprint (training and validation SHA-256 plus config) and refuses to resume from checkpoints
+with a different fingerprint. Japanese samples shown in the README, report, site and playground carry English
+translations that keep the model's mistakes.
+## D-024 / D-026: English model with the same protocol
+
+`kitsune-tales-e4b-en` writes English fantasy with Japanese anime and light-novel themes. It shares the taxonomy,
+schema, filter design, training recipe (only data and system prompt differ), DPO recipe and evaluation protocol with
+the Japanese model: 270 frozen prompts × 3 seeds, the 72-prompt policy suite, 150 judged pairs per comparison and 60
+validation pairs. Lengths are counted in words. Before filtering, overused invented names are rebalanced from
+gender-matched pools (the first generator used one heroine name in 67 % of its stories; afterwards the most frequent
+name appears in 7.7 %).
+## D-027: DPO pairs
+
+Two self-samples per training prompt from the SFT model (2,400 prompts). A pair is kept if a rule decides it (one
+sample fails a hard rule, the other passes) or if the teacher prefers the same sample in both presentation orders.
+Teacher verdicts use one sentence per criterion and up to 2,048 output tokens, so every call ends in a verdict
+(3,797 of 3,798 valid). β = 0.1, lr 2e-5, one epoch, the SFT adapter as the frozen reference.
+## GGUF export
+
+llama.cpp (commit `7fe450e`) converts the merged model; its bundled `transformers` cannot parse the list-form
+`extra_special_tokens` field, so conversion reads the model through a view with that field removed. The stored model is
+unchanged. Q4_K_M (5.3 GB) and Q8_0 (7.97 GB) are each run once on CPU after conversion.
