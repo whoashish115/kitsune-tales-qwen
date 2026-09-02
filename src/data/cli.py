@@ -89,3 +89,51 @@ def build_test_set(raw_dir: Path) -> dict[str, object]:
     h = {TEST_SET.name: file_sha256(TEST_SET)}
     TEST_SET_HASH.write_text(json.dumps(h, indent=2) + "\n", encoding="utf-8")
     return {"n": len(out), "n_passages": sum(1 for r in out if r.get("passage")), **h}
+
+TEST_EN = DATA / "test_prompts_en.jsonl"
+POLICY_EN = DATA / "eval_policy_prompts_en.jsonl"
+HASHES_EN = DATA / "test_prompts_en.sha256"
+TEST_SET_EN = DATA / "test_set_en.jsonl"
+TEST_SET_EN_HASH = DATA / "test_set_en.sha256"
+
+def freeze_test_en() -> dict[str, str]:
+    """Freeze the 270 English held-out prompts and the English policy suite (idempotent: verifies if frozen)."""
+    from kitsune.en import build_test_prompts_en, eval_policy_prompts_en
+
+    if HASHES_EN.exists():
+        return verify_test_en()
+    write_jsonl(TEST_EN, build_test_prompts_en())
+    write_jsonl(POLICY_EN, eval_policy_prompts_en())
+    hashes = {TEST_EN.name: file_sha256(TEST_EN), POLICY_EN.name: file_sha256(POLICY_EN)}
+    HASHES_EN.write_text(json.dumps(hashes, indent=2) + "\n", encoding="utf-8")
+    return hashes
+
+def verify_test_en() -> dict[str, str]:
+    frozen = json.loads(HASHES_EN.read_text(encoding="utf-8"))
+    now = {TEST_EN.name: file_sha256(TEST_EN), POLICY_EN.name: file_sha256(POLICY_EN)}
+    for k, v in now.items():
+        if frozen.get(k) != v:
+            raise SystemExit(f"FROZEN TEST FILE CHANGED: {k} {frozen.get(k)} != {v}")
+    return now
+
+def main(argv: list[str] | None = None) -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument(
+        "cmd",
+        choices=["freeze-test", "verify-test", "build-test-set", "freeze-test-en", "build-test-set-en"],
+    )
+    ap.add_argument("--force", action="store_true")
+    ap.add_argument("--raw", type=Path, default=Path("data/raw/full"))
+    a = ap.parse_args(argv)
+    if a.cmd == "freeze-test":
+        out: dict = freeze_test(force=a.force)
+    elif a.cmd == "verify-test":
+        out = verify_test()
+    elif a.cmd == "freeze-test-en":
+        out = freeze_test_en()
+    elif a.cmd == "build-test-set-en":
+        out = build_test_set_en(a.raw)
+    else:
+        out = build_test_set(a.raw)
+    json.dump(out, sys.stdout, indent=2)
+    print()

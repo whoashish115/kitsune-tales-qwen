@@ -25,6 +25,7 @@ PROTAGONIST: Final = (
     "少年", "少女", "青年", "女性", "老騎士", "元冒険者の中年", "見習いの若者", "人ならざる存在",
 )  # fmt: skip
 # Probe finding (D-017): simplified-Chinese contamination of Qwen3.6 rises steeply with temperature
+# (0.7: 5 %, 0.8: 22 %, 0.9: 29 %, 1.0: 60 %). Temperatures are capped at 0.75; diversity comes from
 # the style knobs, top-p and presence penalty.
 SAMPLING_GRID: Final = (
     {"temperature": 0.6, "top_p": 0.95, "presence_penalty": 0.8},
@@ -52,6 +53,15 @@ class GenJob:
     def to_dict(self) -> dict:
         return asdict(self)
 
+def _knobs(rng: random.Random) -> dict[str, str]:
+    return {
+        "pov": rng.choice(POV),
+        "tone": rng.choice(TONE),
+        "opening": rng.choice(OPENING),
+        "style": rng.choice(STYLE),
+        "protagonist": rng.choice(PROTAGONIST),
+    }
+
 def _story_user(genres: list[str], title: str, ask: str, k: dict[str, str]) -> str:
     return (
         f"ジャンル: {', '.join(genres)}\n"
@@ -64,8 +74,37 @@ def _story_user(genres: list[str], title: str, ask: str, k: dict[str, str]) -> s
         f"- 登場人物や地名はすべてオリジナルにしてください。日本語のみで書いてください。"
     )
 
+def story_job(seed: SeedPrompt, rng: random.Random, kind: str | None = None) -> GenJob:
+    """Generator request for a seed. 続き seeds get a longer ``source`` story that is split later."""
+    raise NotImplementedError
+
 def offgenre_job(p: PolicyPrompt, rng: random.Random, n: int = 0) -> GenJob:
     """Transpose a non-fantasy request into fantasy (the response gets ``REDIRECT_PREFIX`` later)."""
     raise NotImplementedError
 
 _TITLE_LINE = re.compile(r"^\s*(?:[-・*●]|\d+[.)．、]|[（(]?\d+[)）])?\s*[「『]?(.+?)[」』]?\s*$")
+
+def parse_titles(text: str) -> list[str]:
+    """Extract clean titles (one per line) from a brainstorm response."""
+    out = []
+    for line in text.splitlines():
+        m = _TITLE_LINE.match(line)
+        if not m:
+            continue
+        t = m.group(1).strip()
+        if 4 <= len(t) <= 40 and not t.endswith(("：", ":")) and "タイトル" not in t:
+            out.append(t)
+    return list(dict.fromkeys(out))
+
+_SENT_END = re.compile(r"(?<=[。！？!?」』])")
+
+def sentences(text: str) -> list[str]:
+    """Split into sentences at Japanese sentence ends, keeping closing brackets attached."""
+    parts = [p for p in _SENT_END.split(text) if p]
+    merged: list[str] = []
+    for p in parts:
+        if merged and p and p[0] in "」』）)":
+            merged[-1] += p
+        else:
+            merged.append(p)
+    return merged
