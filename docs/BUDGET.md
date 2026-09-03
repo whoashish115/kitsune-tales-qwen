@@ -8,6 +8,7 @@ for this project is **$41.34**; neither account exceeded its credit.
 | `kitsune30` | $30.00 | $29.60 | **$28.29** | smoke tests, data generation, pilot, main SFT, English DPO, evaluation, merges, GGUF |
 | `kitsune12` | $14.28 | $13.90 | **$13.06** | ablations, Japanese DPO labels and training, baselines, judges, lm-eval |
 | **Total** | $44.28 | | **$41.34** | |
+
 ## Budget guard
 
 Every job goes through `kitsune.cost.guard` before launch. It compares the account's hard stop with
@@ -17,6 +18,7 @@ Every job goes through `kitsune.cost.guard` before launch. It compares the accou
 and refuses to launch past it. Each job writes a ledger row (`reports/cost_ledger.jsonl`) with its estimate before it
 starts and its measured wall-clock cost when it ends. Measured over the project, the ledger was 0.96 to 1.12 × Modal's
 billing per account, so recorded spend counts at face value (D-014, D-025, D-028).
+
 ## Prices
 
 From `modal billing rates` (September 2026). CPU and memory are billed on top of the GPU rate:
@@ -31,6 +33,7 @@ From `modal billing rates` (September 2026). CPU and memory are billed on top of
 | CPU | $0.0473 / core / h |
 | Memory | $0.008 / GiB / h |
 | Volumes | $0.09 / GiB / month |
+
 ## Efficiency choices
 
 - **Cost per example, not per hour.** The H100 trains about 4× more examples per hour than an L40S at 1.7× the price,
@@ -40,6 +43,24 @@ From `modal billing rates` (September 2026). CPU and memory are billed on top of
 - **One epoch at batch 16**, sized from the pilot's measured throughput (D-021).
 - **Explicit timeouts and resumable jobs.** Training resumes from checkpoints only when its data fingerprint matches
   (D-023); generation and judging skip finished shards.
+
+## Spend by phase
+
+From the per-job ledger (wall-clock × list rates). The ledger sums to a little less than Modal's bill; the difference
+is image builds, container start-up and storage.
+
+| Phase | Ledger |
+|---|---:|
+| Setup, smoke tests, base-model bake-off | $0.84 |
+| Weight downloads (CPU) | $0.12 |
+| Synthetic data generation and cross-labels (JP + EN) | $8.88 |
+| Pilot and ablations | $5.94 |
+| Main SFT runs | $5.88 |
+| DPO (sampling, teacher labels, training) | $9.85 |
+| Evaluation (generations, perplexity, lm-eval, judges) | $7.62 |
+| Merges and GGUF export | $0.87 |
+| **Total (ledger)** | **$39.99** |
+
 ## Release upload
 
 The merged weights, the English LoRA and the GGUF files (about 59 GB) are copied from the Modal volume to the Hugging

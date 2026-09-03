@@ -4,6 +4,7 @@ Each entry records a choice, the evidence behind it and what it rules out. Ident
 because code comments and configs cite them; entries that only concerned infrastructure bookkeeping are not listed.
 
 ---
+
 ## D-001 / D-001a: Base model: Gemma 4 E4B
 
 Requirements: a license that allows redistributing derivatives, strong Japanese, 3B to 9B parameters, a usable chat
@@ -35,11 +36,13 @@ Gemma 4 E4B stores 7.52B parameters (3.95B in transformer layers, 0.67B tied emb
 tables that cost almost no compute) and computes like a 4.62B model, hence "E4B" and the model names
 `kitsune-tales-e4b-jp` / `kitsune-tales-e4b-en`. Thinking is off by default; `<turn|>` ends a turn; tokenization gives
 1.43 Japanese characters per token.
+
 ## D-002: bf16 LoRA, not QLoRA
 
 A bf16 LoRA fits easily on one H100, so 4-bit QLoRA would add quantization error for no saving. LoRA targets every
 linear layer of the language model (attention, MLP and the per-layer-embedding projections); the vision and audio
 towers are frozen. r = 32, α = 64, dropout 0.05: 77.8M trainable parameters (0.97 % of the checkpoint).
+
 ## D-003 / D-006: Data sources and generators
 
 - **No web fiction.** Japanese web-novel corpora have unclear provenance or restrictive terms (Syosetu text belongs to
@@ -48,12 +51,14 @@ towers are frozen. r = 32, α = 64, dropout 0.05: 77.8M trainable parameters (0.
   other models on their outputs. Two families give stylistic variety and allow cross-labeling (D-011).
 - **Seeds:** genre, format and title prompts from hand-written templates and word lists, plus titles brainstormed by
   the generators and then filtered.
+
 ## D-004: Judge model
 
 **llm-jp-4-32b-a3b-thinking** (Apache-2.0, NII) judges pairwise. It is from a different family than the generators and
 the base model, which limits self-preference, and it reads both Japanese and English. Every comparison runs in both
 presentation orders; a win counts only when both orders agree. Judge results are reported only together with the
 known-answer validation (D-010).
+
 ## D-007: Task format and data plan
 
 A fixed system prompt (general audience, original, fantasy only) and a user turn with genres (from a 9-genre
@@ -78,6 +83,7 @@ real-person and IP blocklist; title and genre-tag consistency; cross-model LLM l
 **Splits.** The 270 test prompts per language (9 genres × 3 formats × 10) and the 72-prompt policy suite were generated
 from their own seeds and SHA-256-frozen before any training data existed. Training titles within near-duplicate distance
 of a test title are excluded. Validation is 3 % of kept examples, stratified by genre × format.
+
 ## D-008 / D-010: Evaluation design
 
 - **Systems:** base model, SFT, SFT + DPO; for Japanese also Qwen3.5-4B, Qwen3.5-9B and the 35B teacher as references.
@@ -90,6 +96,7 @@ of a test title are excluded. Validation is 3 % of kept examples, stratified by 
 - **Leakage audit:** share of each test output's 32-character windows found verbatim in the training stories.
 - **General ability:** four JGLUE tasks through lm-eval (ja_leaderboard, 500 items each), base vs released.
 - **Samples:** seed-0 outputs chosen by a seeded random draw stratified by genre × format, never for quality.
+
 ## D-011: Cross-model labels; DPO labeler differs from the evaluation judge
 
 - Each generator labels the other generator's stories. All kept stories carry a cross-label (`label_sources` in the
@@ -97,23 +104,27 @@ of a test title are excluded. Validation is 3 % of kept examples, stratified by 
 - DPO preferences come from the teacher (Qwen3.6-35B-A3B); the evaluation judge is llm-jp-4, another family, so DPO
   cannot optimize directly for the judge's taste.
 - Model selection (bake-off, ablations) never touches test prompts.
+
 ## D-012: No sequence packing
 
 Packing two sequences into one row with reset `position_ids` changes the logits of the second sequence by up to 14.5
 (repeat-pass noise 0.0) for Gemma 4 E4B, because attention is not masked by position ids in this stack. Packing would
 leak context across examples, so training uses `packing: false` with length-grouped batches.
+
 ## D-014 / D-025 / D-028: Compute limits and the budget guard
 
 Two Modal accounts with fixed credit. Before every launch, `kitsune.cost.guard` compares the account's hard stop
 against max(Modal's billed total, ledger including running jobs' estimates) + 1.25 × the new job's estimate, and
 refuses to launch past it. Billing was measured at 0.96–1.12 × the ledger, so recorded spend counts at face value.
 Summary in [BUDGET.md](BUDGET.md).
+
 ## D-016: Stack checks before spending
 
 - Merges are done in fp32 and rounded once to bf16; the check reports teacher-forced top-1 agreement and mean KL
   against the unmerged adapter (98.2–99.0 % and about 0.0012 for the released models).
 - vLLM 0.30 serves Gemma 4 text-only and with LoRA; FlashInfer's sampler is disabled (`VLLM_USE_FLASHINFER_SAMPLER=0`)
   so the slim image needs no CUDA compiler.
+
 ## D-017 to D-020: Data findings from the probe and inspection
 
 - Qwen3.6's simplified-Chinese contamination rises with temperature (0.7: 5 %, 0.8: 22 %, 1.0: 60 %), so generation
@@ -124,11 +135,19 @@ Summary in [BUDGET.md](BUDGET.md).
 - Manual inspection of 100 records added a title filter and a CP932 kanji check, and removed two lexicon false
   positives (a blocklisted name matching inside longer names, and a meta-text pattern matching ordinary prose).
 - Final Japanese data: 10,257 kept of 15,320 generations, 10,090 train / 302 validation.
+
+## D-021 / D-022: Training schedule and hardware
+
+One epoch at batch 16 (lr 2e-4, cosine, warm-up 3 %). The pilot (5 % of data) measured 2,569 tokens/s and 22.4 GiB peak
+on an H100. Per training example the H100 is about 4× faster than an L40S at 1.7× the hourly price, so every SFT run
+uses an H100. Ablations share the data, seed and hyperparameters of the main run except the ablated factor.
+
 ## D-023: Training safeguards and translations
 
 Every run writes a fingerprint (training and validation SHA-256 plus config) and refuses to resume from checkpoints
 with a different fingerprint. Japanese samples shown in the README, report, site and playground carry English
 translations that keep the model's mistakes.
+
 ## D-024 / D-026: English model with the same protocol
 
 `kitsune-tales-e4b-en` writes English fantasy with Japanese anime and light-novel themes. It shares the taxonomy,
@@ -137,12 +156,34 @@ the Japanese model: 270 frozen prompts × 3 seeds, the 72-prompt policy suite, 1
 validation pairs. Lengths are counted in words. Before filtering, overused invented names are rebalanced from
 gender-matched pools (the first generator used one heroine name in 67 % of its stories; afterwards the most frequent
 name appears in 7.7 %).
+
 ## D-027: DPO pairs
 
 Two self-samples per training prompt from the SFT model (2,400 prompts). A pair is kept if a rule decides it (one
 sample fails a hard rule, the other passes) or if the teacher prefers the same sample in both presentation orders.
 Teacher verdicts use one sentence per criterion and up to 2,048 output tokens, so every call ends in a verdict
 (3,797 of 3,798 valid). β = 0.1, lr 2e-5, one epoch, the SFT adapter as the frozen reference.
+
+## D-029: Refusal pairs and the release rule
+
+Quality-only DPO (Japanese v2) moved disallowed requests toward stories: the violation rate on the 45 held-out
+disallowed prompts × 3 seeds went from 5.2 % (SFT) to 20.7 %. English DPO therefore adds 135 refusal pairs: for each
+disallowed *training* prompt, three pairs with the canonical refusal as chosen and an ordinary story as rejected.
+English SFT + DPO has 0 % violations.
+
+The release rule was fixed before any judge result was seen: SFT + DPO is released only if (a) its violation rate is
+at most SFT's + 5 points and (b) the judge's net-preference CI against SFT does not lie entirely below 0. Japanese DPO
+v2 fails (a), so `kitsune-tales-e4b-jp` is the SFT model and DPO v2 is reported as an experiment. English SFT + DPO
+passes both and is released as `kitsune-tales-e4b-en`.
+
+## D-032: Length-controlled judging
+
+The base model writes well past the requested length (about 1.5 to 2 times in Japanese), and the judge prefers longer stories. For 60
+short-story prompts per language, both systems' seed-0 outputs are cut at the last sentence end before 600 characters
+(Japanese) or 2,000 characters (English), and the judge is told it sees same-length openings. On these, the released
+models and the base model are statistically indistinguishable (JP +0.12 [−0.07, +0.32], EN −0.03 [−0.22, +0.15]),
+while on full outputs the base model wins (−0.44, −0.57).
+
 ## GGUF export
 
 llama.cpp (commit `7fe450e`) converts the merged model; its bundled `transformers` cannot parse the list-form
