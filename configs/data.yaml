@@ -1,0 +1,43 @@
+# Data generation and filtering (D-003, D-007, D-011). Sizes are finalized after the 500-sample probe.
+seed_test: 20260929          # test prompts (frozen before any generation)
+seed_train: 7
+n_test_per_cell: 10          # 9 genres x 3 formats x 10 = 270 held-out prompts
+
+probe:
+  n_prompts: 500             # measures throughput and filter pass rate before the full run
+
+generator1:                  # Qwen/Qwen3.6-35B-A3B-FP8 (Apache-2.0)
+  n_prompts: 11000           # adjusted after the probe to target >= 10k kept examples overall
+  n_title_brainstorm_calls_per_genre: 60   # 20 titles each -> up to 1200 LLM titles per genre
+  llm_title_share: 0.5       # share of training prompts that use LLM-brainstormed titles
+  gpu: H100
+  max_model_len: 4096
+  gpu_memory_utilization: 0.92
+
+generator2:                  # google/gemma-4-26B-A4B-it (Apache-2.0), style diversity (D-010 #4)
+  n_prompts: 5500
+  gpu: H100
+  max_model_len: 4096
+
+offgenre_samples_per_prompt: 4   # 40 off-genre training prompts -> 160 redirect stories per generator
+refusal_variants: 3              # templated refusals per disallowed training prompt
+
+filters:
+  min_japanese_ratio: 0.90
+  min_hiragana_ratio: 0.15
+  min_ngram_uniqueness: 0.85
+  max_line_repeats: 2
+  min_compression_ratio: 0.18
+  max_repeated_chunk_ratio: 0.10
+  min_fantasy_terms: 2
+  max_gore_hits: 1
+  min_label_quality: 3
+  require_llm_label: true
+  dedup_jaccard: 0.7
+val_frac: 0.03
+
+english:                     # D-024: English variant, same two generators with cross-labels
+  generator1: {n_prompts: 4400, n_title_brainstorm_calls_per_genre: 30}
+  generator2: {n_prompts: 3000, n_title_brainstorm_calls_per_genre: 25}
+  llm_title_share: 0.6       # the English title templates cover ~3k distinct titles, so lean on brainstorms
+  offgenre_samples_per_prompt: 3

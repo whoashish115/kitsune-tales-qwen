@@ -49,7 +49,7 @@ pilot:
 	MODAL_PROFILE=$(PROFILE) $(MODAL) run $(APP)::train --config configs/train_pilot.yaml --name sft-pilot
 
 main:
-	MODAL_PROFILE=$(PROFILE) $(MODAL) run $(APP)::train --config configs/train.yaml --name sft-main
+	MODAL_PROFILE=$(PROFILE) $(MODAL) run $(APP)::train --config configs/train_main.yaml --name sft-main
 
 train: pilot main
 
