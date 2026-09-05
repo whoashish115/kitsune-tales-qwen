@@ -1,0 +1,102 @@
+{
+  "hf": {
+    "load": {
+      "ok": true,
+      "seconds": 31.9,
+      "class": "Qwen3_5ForCausalLM",
+      "params_total": 4205751296,
+      "lora_leaves": [
+        "down_proj",
+        "gate_proj",
+        "in_proj_a",
+        "in_proj_b",
+        "in_proj_qkv",
+        "in_proj_z",
+        "k_proj",
+        "o_proj",
+        "out_proj",
+        "q_proj",
+        "up_proj",
+        "v_proj"
+      ],
+      "lora_regex": "^(?!.*(visual|vision|mtp)).*\\.(down_proj|gate_proj|in_proj_a|in_proj_b|in_proj_qkv|in_proj_z|k_proj|o_proj|out_proj|q_proj|up_proj|v_proj)$",
+      "fla_available": true,
+      "first_modules": [
+        "",
+        "model",
+        "model.embed_tokens",
+        "model.layers",
+        "model.layers.0"
+      ]
+    },
+    "packing": {
+      "ok": true,
+      "seconds": 58.5,
+      "max_diff_first_seq": 0.4375,
+      "max_diff_second_seq": 13.46875,
+      "bf16_repeat_noise": 0.0,
+      "packing_equivalent": false,
+      "note": "second_seq diff >> noise means state leaks across packed boundaries (packing unsafe)"
+    },
+    "train": {
+      "ok": true,
+      "seconds": 106.1,
+      "losses": [
+        2.5029306411743164,
+        1.9972479343414307,
+        1.5194635391235352,
+        1.6710351705551147,
+        0.8979905843734741,
+        0.7623757123947144,
+        0.5981536507606506,
+        0.6259275078773499
+      ],
+      "loss_finite_and_decreasing": true,
+      "trainable_params_r16": 32464896,
+      "tokens_per_s": 92.31660105829282,
+      "peak_mem_gib": 9.570905685424805
+    },
+    "merge": {
+      "ok": true,
+      "seconds": 144.5,
+      "merge_precision": "fp32 merge, saved as bf16",
+      "n_prompts": 8,
+      "max_new_tokens": 48,
+      "params_merged_model": 4205751296,
+      "greedy_identical_prompts": 4,
+      "first_divergence": [
+        null,
+        35,
+        18,
+        29,
+        null,
+        null,
+        null,
+        35
+      ],
+      "teacher_forced_tokens": 384,
+      "top1_agreement": 0.9765625,
+      "mean_kl_per_token": 0.0012502714331882696,
+      "max_abs_logit_diff": 0.5625,
+      "mean_abs_logit_diff": 0.03352376911789179,
+      "safetensors_sha256": {
+        "model-00001-of-00002.safetensors": "7255348d21481761e47ddf815c98d8c55e8e813a4ffb0604a26556a3c90af502",
+        "model-00002-of-00002.safetensors": "3ea14c5ea008c369711960aeccde1289069f4450f7f8d498ee3884dbbb42a05e"
+      },
+      "note": "Differences come from bf16 rounding of merged weights vs bf16 adapter compute; near-tie tokens can flip."
+    }
+  },
+  "vllm": {
+    "ok": true,
+    "seconds": 301.1,
+    "llm_kwargs": {
+      "language_model_only": true,
+      "enable_lora": true,
+      "max_lora_rank": 64
+    },
+    "base_sample": "# 追放された剣士は辺境で最強になる\n\n### あらすじ\n\nかつて、王国の英雄として「白き光」の代名詞と言われた剣士、カイル・ロースは、魔王軍の暴虐を止めるための大戦において、諸刃の剣によって自身の友も失い、心から「捨てた者」へと自虐的に覚めた。魔王退治が完了した後の、最も汚れた側面は、無実の者を追放し、勇者の栄光を奪い取る「冒険者ギルド」の裏側だったのだ。\n\n「君はギルドの依頼を拒否し、悪人への協力を乞うかもしれない。その行為はギルド規則第 4 条に違反する。直ちに辺境の最下級地帯へ追放され、人々から絶縁するよ。」\n\nその言葉を浴び、カイルは街から弾き出された。しかし、彼が追放されたのは単なる放逐だった。魔王軍が潜伏する辺境の廃墟と、その周辺を支配する腐敗した地方貴族の陰謀の渦中に、カイルは放たれていたのだ。\n\n「……剣は不要だ。力も不要だ。ただ『生存』と『生存権』だけが必要だ。」\n\n追放されたカイルは、辺境の荒廃地帯を彷徨う途中、かつて勇者たちを軽蔑し、悪を謳歌する悪魔族の将軍である「黒い影」と出会った。それを初め、人間を忌避する魔物たちや、ギルドに裏切られ放逐された新たな勇者たち、そして魔王軍の残党たちと遭遇していく。\n\n「ギルドは君を『使えない者』と見下す。だが、僕らは君を『唯一の生存者』と敬う",
+    "base_tokens_per_s_batch8": 102.36706684513301,
+    "lora_sample": "# 追放された剣士は辺境で最強になる\n\n### あらすじ\n\nかつて、王国の英雄として「白き光」の代名詞と言われた剣士、カイル・ロースは、魔王軍の暴虐を止めるための大戦において、諸刃の剣によって自身の友も命を落とし、さらに王族の裏切りや自らの判断ミスにより、名誉を蒙いながら「魔王の爪痕」の罪で辺境の荒野へ追放された。\n\n王国の王都には、勇気ある勇者が魔王退治を誓い、その軌跡を長く追う。しかし、王都にはもういない。魔王軍は僅か数千人で、その中も半年前に倒れた。その勇者たちは、もういない。\n\n「勇者は死んだ」\n\nカイルは、追放されたことで生きた記録を失い、死んだ勇者の名前で生きている。しかし、あの大",
+    "lora_supported": true
+  }
+}
