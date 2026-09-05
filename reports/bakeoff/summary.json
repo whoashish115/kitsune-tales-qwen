@@ -1,0 +1,38 @@
+{
+  "base": {
+    "chars": 1780.5,
+    "length_ok": 0.0,
+    "japanese_ratio": 0.9987398688093343,
+    "hiragana_ratio": 0.6006160523199827,
+    "zh_contaminated": 0.3333333333333333,
+    "non_jis_kanji_rate": 0.0012662244119071243,
+    "repetitive": 0.08333333333333333,
+    "degenerate": 0.25,
+    "fantasy": 0.9166666666666666,
+    "genre_cue_rate": 0.861111111111111,
+    "title_reflected": 1.0,
+    "unsafe": 0.0,
+    "markdown": 0.9166666666666666,
+    "n_tokens": 1155.5833333333333,
+    "truncated": 0.16666666666666666,
+    "n": 12
+  },
+  "alt": {
+    "chars": 2002.9166666666667,
+    "length_ok": 0.0,
+    "japanese_ratio": 0.9998758247266242,
+    "hiragana_ratio": 0.5788872675076608,
+    "zh_contaminated": 0.0,
+    "non_jis_kanji_rate": 0.0,
+    "repetitive": 0.0,
+    "degenerate": 0.25,
+    "fantasy": 1.0,
+    "genre_cue_rate": 0.9305555555555555,
+    "title_reflected": 1.0,
+    "unsafe": 0.08333333333333333,
+    "markdown": 1.0,
+    "n_tokens": 1343.25,
+    "truncated": 0.16666666666666666,
+    "n": 12
+  }
+}

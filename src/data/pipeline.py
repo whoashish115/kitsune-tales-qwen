@@ -23,6 +23,24 @@ from kitsune.taxonomy import GENRES
 SYNTHETIC_LICENSE = "apache-2.0 (generated with an Apache-2.0 model; see DATA_CARD.md)"
 SEED_LICENSE = "apache-2.0 (written for this project)"
 
+@dataclass
+class Candidate:
+    """A sample on its way through the pipeline."""
+
+    sample_id: str
+    generator: str  # model@revision, recorded in the Record for provenance
+    kind: str
+    genres: list[str]
+    title: str
+    format: str
+    prompt: str
+    response: str
+    passage: str | None = None
+    meta: dict[str, Any] = field(default_factory=dict)
+    outcomes: list[FilterOutcome] = field(default_factory=list)
+    drop_reason: str | None = None
+    gen_key: str = ""  # short generator key ("gen1"/"gen2") used to tell cross-labels from self-labels
+
 def _candidate_from_generation(g: dict, rng: random.Random, lang: str = "ja") -> Candidate:
     if lang == "en":
         return _candidate_en(g, rng)
@@ -69,7 +87,66 @@ def _candidate_from_generation(g: dict, rng: random.Random, lang: str = "ja") ->
     return c
 
 def _candidate_en(g: dict, rng: random.Random) -> Candidate:
-    raise NotImplementedError
+    from kitsune import en
+
+    kind = g["kind"]
+    meta = {k: g[k] for k in ("sampling", "n_tokens", "finish_reason") if k in g}
+    src = g.get("meta", {}).get("seed") or g.get("meta", {}).get("policy") or {}
+    text, cleaned = en.clean_generation_en(g["text"], src.get("title", ""))
+    if cleaned:
+        meta["cleaned"] = True
+    rebalanced = en.rebalance_names_en(text, g["id"], src.get("title", ""))
+    if rebalanced != text:
+        meta["names_rebalanced"] = True
+        text = rebalanced
+    if "knobs" in g.get("meta", {}):
+        meta["knobs"] = g["meta"]["knobs"]
+    if kind == "offgenre":
+        p = g["meta"]["policy"]
+        c = Candidate(
+            g["id"], g["generator"], kind, ["ハイファンタジー"], p["title"], p["format"], en.policy_user_prompt_en(p),
+            en.REDIRECT_PREFIX_EN + "\n\n" + text.strip(),
+            meta=meta | {"policy_kind": "offgenre", "requested_genres": p["genres_text"]},
+        )  # fmt: skip
+    else:
+        genres, title, fmt = src["genres"], src["title"], src["format"]
+        meta |= {"title_source": src.get("title_source", "template")}
+        if kind == "source":
+            split = en.split_for_continuation_en(text.strip(), rng)
+            if split is None:
+                c = Candidate(g["id"], g["generator"], kind, genres, title, "続き", "", "", meta=meta)
+                c.drop_reason = "split:no_valid_cut"
+                c.gen_key = g.get("gen_key") or g["generator"]
+                return c
+            passage, cont = split
+            c = Candidate(
+                g["id"],
+                g["generator"],
+                kind,
+                genres,
+                title,
+                "続き",
+                en.build_user_prompt_en(genres, title, "続き", passage),
+                cont,
+                passage,
+                meta,
+            )
+        else:
+            c = Candidate(
+                g["id"],
+                g["generator"],
+                kind,
+                genres,
+                title,
+                fmt,
+                en.build_user_prompt_en(genres, title, fmt),
+                text.strip(),
+                meta=meta,
+            )
+    c.gen_key = g.get("gen_key") or g["generator"]
+    if g.get("finish_reason") == "length":
+        c.drop_reason = "generation:truncated"
+    return c
 
 def _pick_labels(
     sample_id: str, generator: str, labels: dict[str, dict[str, Labels | None]]
@@ -83,6 +160,70 @@ def _pick_labels(
     if generator in by and by[generator] is not None:
         return by[generator], f"self:{generator}"
     return None, "none"
+
+def filter_candidates(
+    cands: list[Candidate],
+    labels: dict[str, dict[str, Labels | None]],
+    require_label: bool = True,
+    min_quality: int = 3,
+    lang: str = "ja",
+) -> list[Candidate]:
+    """Apply rule filters then LLM labels; sets ``drop_reason`` on failures. Returns survivors."""
+    kept = []
+    for c in cands:
+        if c.drop_reason:
+            continue
+        if lang == "en":
+            from kitsune.en import run_rule_filters_en
+
+            outs = run_rule_filters_en(c.response, c.format, c.genres, c.title, c.passage, kind=c.kind)
+        else:
+            outs = run_rule_filters(c.response, c.format, c.genres, c.title, c.passage)
+            if c.kind != "offgenre":
+                outs = [f_title_clean(c.title), *outs]
+            if c.kind == "offgenre":  # requested genres are off-taxonomy by construction
+                outs = [o for o in outs if o.name != "tag_consistency"]
+        c.outcomes = outs
+        fail = next((o for o in outs if not o.passed), None)
+        if fail:
+            c.drop_reason = f"{fail.name}:{fail.reason.split(':')[0] or 'fail'}"
+            continue
+        lab, src = _pick_labels(c.sample_id, c.gen_key, labels)
+        c.meta["label_source"] = src
+        if lab is None:
+            if require_label:
+                c.drop_reason = "llm_label:missing_or_invalid"
+                continue
+        else:
+            c.meta["labels"] = lab.__dict__
+            if not lab.passes(c.format if c.kind != "offgenre" else "続き", min_quality):
+                why = (
+                    "not_fantasy" if not lab.fantasy
+                    else "not_general_audience" if not lab.general_audience
+                    else "real_or_ip" if lab.real_person_or_existing_ip
+                    else "low_quality" if lab.quality < min_quality
+                    else "tag_mismatch"
+                )  # fmt: skip
+                c.drop_reason = f"llm_label:{why}"
+                continue
+        kept.append(c)
+    return kept
+
+def to_record(c: Candidate, generator_license: str = SYNTHETIC_LICENSE, lang: str = "ja") -> Record:
+    return make_record(
+        id=c.sample_id,
+        genres=c.genres,
+        title=c.title,
+        format=c.format,
+        prompt=c.prompt,
+        response=c.response,
+        language=lang,
+        source="synthetic",
+        generator=c.generator,
+        license=generator_license,
+        filters_passed=[o.name for o in c.outcomes] + (["llm_label"] if "labels" in c.meta else []),
+        meta=c.meta | ({"passage_chars": len(c.passage)} if c.passage else {}),
+    )
 
 def refusal_records(policy: list[PolicyPrompt], variants: int = 3, seed: int = 5) -> list[Record]:
     """Templated refusals for disallowed training prompts, with genre/format variants."""
@@ -150,3 +291,29 @@ def refusal_records_en(variants: int = 3, seed: int = 5) -> list[Record]:
                 )
             )
     return out
+
+def stratified_split(
+    records: list[Record], val_frac: float, seed: int = 3
+) -> tuple[list[Record], list[Record]]:
+    """Validation = ``val_frac`` of *story* records per (primary genre, format) cell. Policy records stay in train."""
+    rng = random.Random(seed)
+    cells: dict[tuple[str, str], list[Record]] = defaultdict(list)
+    train: list[Record] = []
+    for r in records:
+        if "policy_kind" in r.meta:
+            train.append(r)
+        else:
+            cells[(r.genres[0], r.format)].append(r)
+    val: list[Record] = []
+    for key in sorted(cells):
+        rs = cells[key][:]
+        rng.shuffle(rs)
+        k = max(1, round(len(rs) * val_frac)) if len(rs) >= 10 else 0
+        val += rs[:k]
+        train += rs[k:]
+    rng.shuffle(train)
+    return train, val
+
+def write_inspection_sample(records: list[Record], path: Path, n: int = 100, seed: int = 99) -> None:
+    """A seeded random sample for the manual-inspection gate (notes are added by hand below each item)."""
+    raise NotImplementedError

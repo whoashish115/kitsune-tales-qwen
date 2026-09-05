@@ -5,7 +5,7 @@
 - [x] frozen eval policy suite
 - [x] cloud gpu jobs with a budget guard
 - [x] dpo + pairwise judge
-- [ ] base model bake-off
+- [x] base model bake-off
 - [ ] full data generation
 - [ ] english track
 - [ ] dpo safety pairs
