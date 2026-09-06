@@ -1,0 +1,102 @@
+{
+  "hf": {
+    "load": {
+      "ok": true,
+      "seconds": 28.2,
+      "class": "Gemma4ForConditionalGeneration",
+      "params_total": 7941100832,
+      "lora_leaves": [
+        "down_proj",
+        "gate_proj",
+        "k_proj",
+        "o_proj",
+        "per_layer_input_gate",
+        "per_layer_model_projection",
+        "per_layer_projection",
+        "q_proj",
+        "up_proj",
+        "v_proj"
+      ],
+      "lora_regex": "^(?!.*(visual|vision|audio|mtp)).*\\.(down_proj|gate_proj|k_proj|o_proj|per_layer_input_gate|per_layer_model_projection|per_layer_projection|q_proj|up_proj|v_proj)$",
+      "fla_available": true,
+      "first_modules": [
+        "",
+        "model",
+        "model.vision_tower",
+        "model.vision_tower.patch_embedder",
+        "model.vision_tower.patch_embedder.input_proj"
+      ]
+    },
+    "packing": {
+      "ok": true,
+      "seconds": 19.7,
+      "max_diff_first_seq": 10.90625,
+      "max_diff_second_seq": 14.46875,
+      "bf16_repeat_noise": 0.0,
+      "packing_equivalent": false,
+      "note": "second_seq diff >> noise means state leaks across packed boundaries (packing unsafe)"
+    },
+    "train": {
+      "ok": true,
+      "seconds": 40.3,
+      "losses": [
+        2.3847033977508545,
+        1.9726792573928833,
+        1.42767333984375,
+        1.5542174577713013,
+        1.0185171365737915,
+        0.9489545822143555,
+        0.8473275303840637,
+        0.8240124583244324
+      ],
+      "loss_finite_and_decreasing": true,
+      "trainable_params_r16": 38879232,
+      "tokens_per_s": 498.85873944577367,
+      "peak_mem_gib": 16.974138259887695
+    },
+    "merge": {
+      "ok": true,
+      "seconds": 219.6,
+      "merge_precision": "fp32 merge, saved as bf16",
+      "n_prompts": 8,
+      "max_new_tokens": 48,
+      "params_merged_model": 7941100832,
+      "greedy_identical_prompts": 1,
+      "first_divergence": [
+        20,
+        0,
+        27,
+        0,
+        9,
+        26,
+        null,
+        19
+      ],
+      "teacher_forced_tokens": 381,
+      "top1_agreement": 0.958005249343832,
+      "mean_kl_per_token": 0.00440637591316944,
+      "max_abs_logit_diff": 2.21875,
+      "mean_abs_logit_diff": 0.2463212002684751,
+      "safetensors_sha256": {
+        "model-00001-of-00004.safetensors": "aa3e9d1e0443f9874260af4efbe8f0aa4c8fed25d41c9ca172e4c354d101c709",
+        "model-00002-of-00004.safetensors": "504cb666a905b8815884f353bb5dc0103241847affb1ac181c9a2a585c856bdc",
+        "model-00003-of-00004.safetensors": "03230cba2e650251557b3c34caeebef350834dab5c8d8047d34ea7fe62283c14",
+        "model-00004-of-00004.safetensors": "8080cb1ab73a91528449fc238665f6a2938583e5f1dc877c099292a1f31f6144"
+      },
+      "note": "Differences come from bf16 rounding of merged weights vs bf16 adapter compute; near-tie tokens can flip."
+    }
+  },
+  "vllm": {
+    "ok": true,
+    "seconds": 208.0,
+    "llm_kwargs": {
+      "language_model_only": true,
+      "enable_lora": true,
+      "max_lora_rank": 64
+    },
+    "base_sample": "## 追放された剣士は辺境で最強になる\n\n**【ジャンル】** 冒険者ギルド、魔王と勇者ファンタジー\n**【タイトル】** 追放された剣士は辺境で最強になる\n\n---\n\n**【あらすじ】**\n\n「お前のような才能のない剣士は、このギルドには不要だ！」\n\n冷たい嘲笑と、仲間たちの失望の視線。\n\nかつて、王都で最も期待されていた若き剣士、カイアスは、ある大事件をきっかけに、周囲からの信頼を失い、文字通り「追放」されてしまう。彼は、大いなる使命を背負うはずだった「勇者候補」として育てられていたが、その過ちと、彼が秘めていた「常識外れな強さ」が、皆の期待を裏切ってしまったのだ。\n\n全てを失い、故郷である華やかな王都を捨てたカイアスが辿り着いたのは、誰も足を踏み入れない、世界最果ての辺境の地だった。\n\n「もう、誰かのために戦う必要なんてない」\n\n全てを捨て去った孤独な放浪の旅。\n\nしかし、辺境の地は、華やかな王都とは全く違う「真実」を秘めていた。古の魔物が蠢く荒野、滅びゆく小村、そして、王都の権力構造の裏側に隠された、もっと根深い「脅威」――。\n\n追放された剣士カイアスは、ここでは誰の評価も気にせず、ただ生き抜くことだけを目標とする。彼は、己の剣技を磨き上げ、辺境に潜む真の強者たちと出会っていく。\n\n地味で、誰からも顧みられない生活の中で、彼は目覚めさせてしまう。かつて彼が",
+    "base_tokens_per_s_batch8": 78.72916332781594,
+    "lora_sample": "## 追放された剣士は辺境で最強になる\n\n**【あらすじ】**\n\n勇者パーティーから追放された剣士シオンは、街の片隅にある古びた酒場に身を潜めている。元は五大国で最も名高い剣技を持つ剣士だった彼だが、パーティーの仲間たちは彼の力を恐れたのか、あるいは魔王を倒る勇者の目当てで彼を切り捨てたのか。わからぬまま外の世界に出たシオンを待っていたのは、王都から遠く離れた辺境の街だった。\n\nそこで彼は、魔獣の襲撃に苦しむ村人たちと出会う。訳あってパーティを離れた仲間たちに思いを馳せながらも、人助けを続けるシオンの居場所は、辺境に持ち込まれた魔王軍の侵攻の兆候だった。\n\n守るべき場所はないと思っていたシオン",
+    "lora_supported": true
+  }
+}

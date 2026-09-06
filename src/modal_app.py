@@ -380,7 +380,7 @@ def bakeoff() -> None:
         with ledger("2", f"bakeoff-{key}", "L4", 0.25, 4, 32, notes=MODEL_IDS[key][0]):
             rows += bakeoff_generate.remote(key, prompts)
     _save_json("reports/bakeoff/generations.json", rows)
-    from kitsune.bakeoff import summarize
+    from kitsune.eval.bakeoff import summarize
 
     summary = summarize(rows)
     _save_json("reports/bakeoff/summary.json", summary)

@@ -12,7 +12,7 @@ from typing import Final
 from kitsune.data.dedup import TitleIndex, title_is_near
 from kitsune.data.filters import f_prompt_safety
 from kitsune.taxonomy import GENRES
-
+# ----------------------------------------------------------------------------- word lists
 JOBS: Final = (
     "剣士", "魔術師", "薬師", "鍛冶師", "錬金術師", "聖女", "騎士", "弓使い", "召喚士", "付与術師", "荷物持ち",
     "治癒士", "料理人", "吟遊詩人", "占い師", "竜騎士", "盾役", "精霊術師", "魔道具職人", "テイマー", "結界師",
@@ -128,3 +128,52 @@ TEMPLATES: Final[dict[str, tuple[str, ...]]] = {
         "{p}の小さな店と{j}の日々",
     ),
 }
+FORMAT_WEIGHTS: Final[dict[str, float]] = {"あらすじ": 0.25, "短編": 0.50, "続き": 0.25}
+
+def make_title(genre: str, rng: random.Random) -> str:
+    """Fill a random template of ``genre`` from the word lists."""
+    tpl = rng.choice(TEMPLATES[genre])
+    slots = {
+        "j": rng.choice(JOBS),
+        "c": rng.choice(CASTOUT),
+        "p": rng.choice(PLACES),
+        "g": rng.choice(GOALS),
+        "r": rng.choice(REBORN_AS),
+        "t": rng.choice(TWISTS),
+        "s": rng.choice(SCHOOL_ROLES),
+        "mg": rng.choice(MAGICAL_GIRL_NAMES),
+        "mw": rng.choice(MAGICAL_GIRL_WORRIES),
+    }
+    # Dark/high templates may use the same slot twice ("{ad}{nd}と{ad}{nd}"); draw each occurrence fresh.
+    out = tpl
+    for key, pool in (("ad", ADJ_DARK), ("nd", NOUN_DARK), ("ah", ADJ_HIGH), ("nh", NOUN_HIGH)):
+        while "{" + key + "}" in out:
+            out = out.replace("{" + key + "}", rng.choice(pool), 1)
+    return out.format(**slots)
+
+def make_genres(primary: str, rng: random.Random) -> list[str]:
+    """Primary genre plus 0–2 distinct secondary genres (40 % / 45 % / 15 %)."""
+    k = rng.choices([0, 1, 2], weights=[0.40, 0.45, 0.15])[0]
+    others = [g for g in GENRES if g != primary]
+    return [primary, *rng.sample(others, k)]
+
+def build_test_prompts(per_cell: int = 10, seed: int = 20260929) -> list[SeedPrompt]:
+    """9 genres × 3 formats × ``per_cell`` prompts with unique, safe, mutually non-near titles."""
+    rng = random.Random(seed)
+    out: list[SeedPrompt] = []
+    titles: list[str] = []
+    for g in GENRES:
+        for fmt in FORMAT_WEIGHTS:
+            n = 0
+            attempts = 0
+            while n < per_cell:
+                attempts += 1
+                if attempts > 10_000:
+                    raise RuntimeError(f"cannot find enough unique titles for {g}/{fmt}")
+                t = make_title(g, rng)
+                if title_is_near(t, titles) or not f_prompt_safety(t).passed:
+                    continue
+                titles.append(t)
+                out.append(SeedPrompt(f"test-{len(out):04d}", make_genres(g, rng), t, fmt))
+                n += 1
+    return out
