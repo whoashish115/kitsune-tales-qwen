@@ -1,0 +1,48 @@
+{
+  "gen_key": "gen2",
+  "model": "google/gemma-4-26B-A4B-it",
+  "revision": "4d7ae4984b7db7de8f8457170b3f1a419ee76d52",
+  "mode": "full",
+  "load_kwargs": {
+    "language_model_only": true
+  },
+  "stages": {
+    "titles_gen2": {
+      "n": 270,
+      "seconds": 32.6,
+      "gen_tokens": 82540,
+      "prompt_tokens": 62583,
+      "gen_tokens_per_s": 2528.5
+    },
+    "gen_gen2": {
+      "n": 6160,
+      "seconds": 573.6,
+      "gen_tokens": 4912703,
+      "prompt_tokens": 1548770,
+      "gen_tokens_per_s": 8564.9
+    },
+    "labels_by_gen2": {
+      "n": 15320,
+      "seconds": 364.5,
+      "gen_tokens": 949840,
+      "prompt_tokens": 17078537,
+      "gen_tokens_per_s": 2605.6
+    }
+  },
+  "llm_titles_per_genre": {
+    "異世界転生": 600,
+    "悪役令嬢・転生": 599,
+    "魔王と勇者": 596,
+    "冒険者ギルド": 599,
+    "魔法学園": 599,
+    "魔法少女": 589,
+    "ダークファンタジー": 595,
+    "ハイファンタジー": 599,
+    "スローライフ": 599
+  },
+  "label_structured_outputs": [
+    "structured_outputs"
+  ],
+  "n_labels": 15320,
+  "n_labels_valid_json": 15320
+}
