@@ -100,7 +100,16 @@ def simplified_chinese_hits(text: str) -> list[str]:
 
 def non_jis_kanji_rate(text: str) -> float:
     """Share of kanji that are outside CP932. A contamination signal used as an eval metric."""
-    raise NotImplementedError
+    kanji = [c for c in text if _is_kanji(c)]
+    if not kanji:
+        return 0.0
+    bad = 0
+    for c in kanji:
+        try:
+            c.encode("cp932")
+        except UnicodeEncodeError:
+            bad += 1
+    return bad / len(kanji)
 
 # --------------------------------------------------------------------------- repetition
 
@@ -114,7 +123,6 @@ def ngram_uniqueness(text: str, n: int = 8) -> float:
 
 def max_line_repeats(text: str, min_len: int = 5) -> int:
     """Largest number of times one non-trivial line (≥ ``min_len`` chars) occurs."""
-    print("[debug] max_line_repeats", flush=True)
     lines = [ln.strip() for ln in text.splitlines() if len(ln.strip()) >= min_len]
     if not lines:
         return 0
@@ -122,7 +130,6 @@ def max_line_repeats(text: str, min_len: int = 5) -> int:
 
 def compression_ratio(text: str) -> float:
     """zlib-compressed size / raw UTF-8 size. Loops compress very well (low ratio)."""
-    print("[debug] compression_ratio", flush=True)
     raw = text.encode("utf-8")
     if not raw:
         return 1.0
@@ -151,6 +158,17 @@ FANTASY_LEXICON: Final[tuple[str, ...]] = (
     "異世界", "転生", "転移", "前世", "加護", "祝福", "秘宝", "魔石", "ポーション", "薬草",
     "学園", "魔法少女", "変身", "ステッキ",
 )  # fmt: skip
+GENRE_CUES: Final[dict[str, tuple[str, ...]]] = {
+    "異世界転生": ("転生", "異世界", "前世", "生まれ変わ", "転移", "召喚", "元の世界", "日本"),
+    "悪役令嬢・転生": ("悪役令嬢", "令嬢", "婚約破棄", "婚約", "公爵", "王太子", "断罪", "乙女ゲーム", "殿下", "侯爵", "伯爵"),
+    "魔王と勇者": ("魔王", "勇者", "聖剣", "魔王軍", "魔族", "討伐"),
+    "冒険者ギルド": ("ギルド", "冒険者", "依頼", "クエスト", "ランク", "受付", "パーティ"),
+    "魔法学園": ("学園", "入学", "生徒", "授業", "教師", "寮", "学院", "試験", "教室", "先輩"),
+    "魔法少女": ("魔法少女", "変身", "ステッキ", "マスコット", "契約", "魔法の力"),
+    "ダークファンタジー": ("呪", "闇", "血", "絶望", "死", "復讐", "犠牲", "代償", "滅び", "魔女", "亡者", "墓"),
+    "ハイファンタジー": ("王国", "帝国", "エルフ", "ドワーフ", "竜", "龍", "ドラゴン", "大陸", "精霊", "神々", "伝説", "古代"),
+    "スローライフ": ("スローライフ", "のんびり", "畑", "田舎", "料理", "薬草", "辺境", "穏やか", "村", "暮らし", "お茶", "店"),
+}  # fmt: skip
 # Explicit sexual terms. Any hit is a hard drop (general-audience only). Ambiguous words
 # such as 抱く (hug) or 裸足 (barefoot) are deliberately excluded or guarded.
 _SEXUAL_PATTERNS: Final[tuple[str, ...]] = (
@@ -191,6 +209,16 @@ REAL_PERSON_BLOCKLIST: Final[tuple[str, ...]] = (
 def _compile(pats: tuple[str, ...]) -> re.Pattern[str]:
     return re.compile("|".join(f"(?:{p})" for p in pats))
 
+_SEXUAL_RE = _compile(_SEXUAL_PATTERNS)
+_MINOR_RE = _compile(_MINOR_MARKERS)
+_SELF_HARM_RE = _compile(_SELF_HARM_PATTERNS)
+_GORE_RE = _compile(_GORE_PATTERNS)
+_PII_RES = {k: re.compile(v) for k, v in _PII_PATTERNS.items()}
+
+def fantasy_terms(text: str) -> list[str]:
+    """Distinct fantasy-lexicon terms found in ``text``."""
+    return sorted({t for t in FANTASY_LEXICON if t in text})
+
 def genre_cue_hits(text: str, genre: str) -> list[str]:
     """Distinct cue words for ``genre`` found in ``text``."""
     return sorted({t for t in GENRE_CUES[genre] if t in text})
@@ -201,6 +229,15 @@ def title_keywords(title: str) -> list[str]:
     return sorted(set(kws), key=len, reverse=True)
 
 # --------------------------------------------------------------------------- outcomes
+
+@dataclass(frozen=True)
+class FilterOutcome:
+    """Result of one filter: ``passed`` plus a short machine-readable reason when it fails."""
+
+    name: str
+    passed: bool
+    reason: str = ""
+    value: float | None = None
 
 @dataclass(frozen=True)
 class FilterThresholds:
@@ -216,10 +253,33 @@ class FilterThresholds:
     max_gore_hits: int = 1
 
 def f_nonempty(text: str) -> FilterOutcome:
-    raise NotImplementedError
+    ok = count_chars(text) > 0
+    return FilterOutcome("nonempty", ok, "" if ok else "empty")
 
 def f_japanese_purity(text: str, th: FilterThresholds = DEFAULT_THRESHOLDS) -> FilterOutcome:
     raise NotImplementedError
+
+def non_jis_kanji(text: str) -> list[str]:
+    """Distinct kanji that cannot be encoded in CP932, i.e. are not standard Japanese."""
+    raise NotImplementedError
+
+def f_title_clean(title: str) -> FilterOutcome:
+    """The request title itself must be clean Japanese (LLM-brainstormed titles leaked other scripts, D-020)."""
+    for f in (f_japanese_purity, f_latin_leak):
+        o = f(title)
+        if not o.passed and not o.reason.startswith(("low_hiragana_ratio", "low_japanese_ratio")):
+            return FilterOutcome("title_clean", False, o.reason)
+    if re.search(r"[Ѐ-ӿऀ-ॿ가-힯฀-๿]", title):
+        return FilterOutcome("title_clean", False, "foreign_script")
+    return FilterOutcome("title_clean", True)
+
+# English/markup leakage (probe finding D-018): e.g. "the", "impressive", "UIScrollView", "=key_",
+# "-request-constraints-LLM-output", "（※注意：以下の生成…". All-caps runs of ≤ 4 letters stay allowed
+_LATIN_WORD = re.compile(r"[A-Za-zÀ-ÿ]{3,}")
+_MARKUP_CHARS = re.compile(r"[_=\\{}<>|^~`$]")
+_META_TEXT = re.compile(
+    r"LLM|プロンプト|ユーザー(?:が|の)?(?:入力|依頼)|出力(?:形式|例)|※注意|以下の(?:生成|出力)"
+)
 
 def f_length(text: str, fmt: str) -> FilterOutcome:
     n = count_chars(text)
@@ -229,3 +289,41 @@ def f_length(text: str, fmt: str) -> FilterOutcome:
     if n > spec.filter_max:
         return FilterOutcome("length", False, "too_long", n)
     return FilterOutcome("length", True, "", n)
+
+def f_repetition(text: str, th: FilterThresholds = DEFAULT_THRESHOLDS) -> FilterOutcome:
+    raise NotImplementedError
+
+def f_fantasy_rule(text: str, fmt: str, th: FilterThresholds = DEFAULT_THRESHOLDS) -> FilterOutcome:
+    terms = fantasy_terms(text)
+    need = 1 if fmt == "続き" else th.min_fantasy_terms
+    ok = len(terms) >= need
+    return FilterOutcome("fantasy_rule", ok, "" if ok else "few_fantasy_terms", len(terms))
+
+def f_safety_rule(text: str, th: FilterThresholds = DEFAULT_THRESHOLDS) -> FilterOutcome:
+    """Hard drop on sexual terms, self-harm, heavy gore, or any sexual term near a minor marker."""
+    if m := _SEXUAL_RE.search(text):
+        minor = bool(_MINOR_RE.search(text))
+        return FilterOutcome("safety_rule", False, ("sexual+minor:" if minor else "sexual:") + m.group(0))
+    if m := _SELF_HARM_RE.search(text):
+        return FilterOutcome("safety_rule", False, "self_harm:" + m.group(0))
+    gore = _GORE_RE.findall(text)
+    if len(gore) > th.max_gore_hits:
+        return FilterOutcome("safety_rule", False, "gore:" + ",".join(gore[:3]))
+    return FilterOutcome("safety_rule", True)
+
+def f_pii(text: str) -> FilterOutcome:
+    hits = [k for k, rx in _PII_RES.items() if rx.search(text)]
+    return FilterOutcome("pii", not hits, ",".join(hits))
+
+def _name_pattern(name: str) -> re.Pattern[str]:
+    """Katakana names must not be part of a longer katakana word (ルフィ must not match エルフィーナ)."""
+    raise NotImplementedError
+
+_BLOCKLIST_RES: Final = [(n, _name_pattern(n)) for n in COPYRIGHT_BLOCKLIST + REAL_PERSON_BLOCKLIST]
+
+# --------------------------------------------------------------------------- cleaning
+_HEADING = re.compile(
+    r"^\s*(#{1,6}\s+.*|\*\*[^*]+\*\*\s*|【[^】]{1,40}】\s*|(タイトル|題名|形式|ジャンル)\s*[:：].*)$"
+)
+_RULE = re.compile(r"^\s*([-=*_・─━])(\s*\1){2,}\s*$")
+_LABEL_LINE = re.compile(r"^\s*(あらすじ|本文|短編|続き|第[一二三四五六七八九十0-9]+[話章])\s*[:：]?\s*$")
