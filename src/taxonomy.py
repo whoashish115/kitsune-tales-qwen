@@ -1,11 +1,15 @@
 """Fixed genre taxonomy, output formats, and length targets.
+
 The taxonomy is closed: every record's ``genres`` must be a non-empty subset of
 :data:`GENRES`. User input may use common aliases (for example ``ギルド``),
 which :func:`normalize_genre` maps to the canonical name.
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Final
+
 GENRES: Final[tuple[str, ...]] = (
     "異世界転生",
     "悪役令嬢・転生",
@@ -17,6 +21,7 @@ GENRES: Final[tuple[str, ...]] = (
     "ハイファンタジー",
     "スローライフ",
 )
+
 GENRE_EN: Final[dict[str, str]] = {
     "異世界転生": "isekai",
     "悪役令嬢・転生": "villainess/reincarnation",
@@ -28,6 +33,7 @@ GENRE_EN: Final[dict[str, str]] = {
     "ハイファンタジー": "high fantasy",
     "スローライフ": "slow-life fantasy",
 }
+
 # Alias -> canonical. Keys are compared after NFKC + lowercasing + stripping spaces.
 _ALIASES: Final[dict[str, str]] = {
     "異世界": "異世界転生",
@@ -56,17 +62,21 @@ _ALIASES: Final[dict[str, str]] = {
     "のんびり": "スローライフ",
 }
 
+
 class UnknownGenreError(ValueError):
     """Raised when a genre string is neither canonical nor a known alias."""
+
 
 def _key(s: str) -> str:
     import unicodedata
 
     return unicodedata.normalize("NFKC", s).lower().replace(" ", "").replace("-", "").replace("_", "")
 
+
 _CANON_BY_KEY: Final[dict[str, str]] = {_key(g): g for g in GENRES} | {
     _key(a): g for a, g in _ALIASES.items()
 }
+
 
 def normalize_genre(s: str) -> str:
     """Map a genre or alias to its canonical taxonomy name.
@@ -79,9 +89,9 @@ def normalize_genre(s: str) -> str:
         return _CANON_BY_KEY[k]
     raise UnknownGenreError(f"genre not in taxonomy: {s!r}")
 
+
 def normalize_genres(items: list[str] | tuple[str, ...]) -> list[str]:
     """Normalize, de-duplicate (order-preserving) and validate a genre list (1–3 items)."""
-    print("[debug] normalize_genres", flush=True)
     out: list[str] = []
     for it in items:
         g = normalize_genre(it)
@@ -91,5 +101,42 @@ def normalize_genres(items: list[str] | tuple[str, ...]) -> list[str]:
         raise ValueError(f"expected 1-3 genres, got {len(out)}: {out}")
     return out
 
+
+@dataclass(frozen=True)
+class FormatSpec:
+    """Length policy for one output format (characters, whitespace excluded)."""
+
+    name: str
+    en: str
+    target_min: int
+    target_max: int
+    filter_min: int
+    filter_max: int
+    max_new_tokens: int  # generation cap used at inference/eval time
+
+
+FORMATS: Final[dict[str, FormatSpec]] = {
+    "あらすじ": FormatSpec("あらすじ", "synopsis", 200, 500, 150, 600, 700),
+    "短編": FormatSpec("短編", "short story", 800, 1500, 750, 1650, 2048),
+    "続き": FormatSpec("続き", "continuation", 400, 800, 300, 1000, 1200),
+}
+
 # Passage length (chars) given in the prompt for 続き.
 CONTINUATION_PASSAGE_RANGE: Final[tuple[int, int]] = (200, 400)
+
+
+def count_chars(text: str) -> int:
+    """Length as used by every length rule in this project: characters excluding whitespace."""
+    return sum(1 for ch in text if not ch.isspace())
+
+
+def within_target(text: str, fmt: str) -> bool:
+    """True if ``text`` length is inside the *target* band of ``fmt`` (used for length adherence)."""
+    spec = FORMATS[fmt]
+    return spec.target_min <= count_chars(text) <= spec.target_max
+
+
+def within_filter(text: str, fmt: str) -> bool:
+    """True if ``text`` length is inside the (slightly wider) *training filter* band of ``fmt``."""
+    spec = FORMATS[fmt]
+    return spec.filter_min <= count_chars(text) <= spec.filter_max
