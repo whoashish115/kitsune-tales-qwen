@@ -1,0 +1,28 @@
+# Pilot: ~5 % of the data, measures tokens/s, memory and the loss curve before the main run (Phase 4).
+base_model: google/gemma-4-E4B-it
+base_revision: ee0ef6023621cff504d758262d4e04895a5af4a2
+wandb_group: pilot
+seed: 42
+data_fraction: 0.05
+val_fraction: 0.5
+max_length: 2048
+packing: false             # decided by the Phase-2 packing-equivalence smoke test (D-012)
+padding_free: false
+group_by_length: true
+lora_r: 32
+lora_alpha: 64
+lora_dropout: 0.05
+learning_rate: 2.0e-4
+warmup_ratio: 0.05
+weight_decay: 0.0
+max_grad_norm: 1.0
+epochs: 1
+per_device_batch_size: 8
+grad_accum: 2
+logging_steps: 5
+eval_steps: 25
+save_steps: 25
+gpu: H100
+cpu: 8
+memory_gib: 48
+timeout_h: 1.0

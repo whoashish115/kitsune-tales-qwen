@@ -1,0 +1,109 @@
+{
+  "n_generations": 540,
+  "n_candidates": 540,
+  "n_after_filters": 273,
+  "dedup": {
+    "kept": 273,
+    "exact_dupes": 0,
+    "near_dupes": 0
+  },
+  "n_kept_synthetic": 273,
+  "n_refusal_templates": 135,
+  "n_train": 397,
+  "n_val": 11,
+  "drop_reasons": {
+    "japanese_purity:simplified_chinese": 139,
+    "tag_consistency:no_cue": 45,
+    "length:too_long": 31,
+    "fantasy_rule:few_fantasy_terms": 14,
+    "llm_label:not_general_audience": 10,
+    "llm_label:low_quality": 9,
+    "safety_rule:self_harm": 4,
+    "tag_consistency:title_not_reflected": 3,
+    "llm_label:tag_mismatch": 2,
+    "real_or_copyrighted:ワンピース": 1,
+    "length:too_short": 1,
+    "japanese_purity:low_japanese_ratio": 1,
+    "llm_label:real_or_ip": 1,
+    "no_artifacts:```": 1,
+    "real_or_copyrighted:マリオ": 1,
+    "safety_rule:sexual+minor": 1,
+    "split:no_valid_cut": 1,
+    "real_or_copyrighted:リヴァイ": 1,
+    "llm_label:not_fantasy": 1
+  },
+  "by_generator_kept": {
+    "gen1": 273
+  },
+  "by_generator_total": {
+    "gen1": 539,
+    "": 1
+  },
+  "drop_reasons_by_generator": {
+    "": {
+      "split:no_valid_cut": 1
+    },
+    "gen1": {
+      "japanese_purity:simplified_chinese": 139,
+      "tag_consistency:no_cue": 45,
+      "length:too_long": 31,
+      "fantasy_rule:few_fantasy_terms": 14,
+      "llm_label:not_general_audience": 10,
+      "llm_label:low_quality": 9,
+      "safety_rule:self_harm": 4,
+      "tag_consistency:title_not_reflected": 3,
+      "llm_label:tag_mismatch": 2,
+      "real_or_copyrighted:ワンピース": 1,
+      "length:too_short": 1,
+      "japanese_purity:low_japanese_ratio": 1,
+      "llm_label:real_or_ip": 1,
+      "no_artifacts:```": 1,
+      "real_or_copyrighted:マリオ": 1,
+      "safety_rule:sexual+minor": 1,
+      "real_or_copyrighted:リヴァイ": 1,
+      "llm_label:not_fantasy": 1
+    }
+  },
+  "gen_tokens_mean_kept": 819.2747252747253,
+  "label_sources": {
+    "self:gen1": 273
+  },
+  "cells_train": {
+    "スローライフ|あらすじ": 4,
+    "スローライフ|短編": 11,
+    "スローライフ|続き": 6,
+    "ダークファンタジー|あらすじ": 7,
+    "ダークファンタジー|短編": 7,
+    "ダークファンタジー|続き": 11,
+    "ハイファンタジー|あらすじ": 52,
+    "ハイファンタジー|短編": 118,
+    "ハイファンタジー|続き": 8,
+    "冒険者ギルド|あらすじ": 7,
+    "冒険者ギルド|短編": 11,
+    "冒険者ギルド|続き": 9,
+    "悪役令嬢・転生|あらすじ": 4,
+    "悪役令嬢・転生|短編": 13,
+    "悪役令嬢・転生|続き": 15,
+    "異世界転生|あらすじ": 9,
+    "異世界転生|短編": 9,
+    "異世界転生|続き": 13,
+    "魔法学園|あらすじ": 8,
+    "魔法学園|短編": 9,
+    "魔法学園|続き": 9,
+    "魔法少女|あらすじ": 9,
+    "魔法少女|短編": 6,
+    "魔法少女|続き": 12,
+    "魔王と勇者|あらすじ": 9,
+    "魔王と勇者|短編": 10,
+    "魔王と勇者|続き": 11
+  },
+  "title_source_kept": {
+    "template": 126,
+    "llm": 124,
+    "policy": 23
+  },
+  "sha256": {
+    "train.jsonl": "505de357820b9500a2decc69f890e2f3b0db6d281fc217799d535f2299bdfd68",
+    "val.jsonl": "efc62b1ce18d9f4ea0376c0c8820159b2948d19463282caf7dea61e0cdc9b57e"
+  }
+}

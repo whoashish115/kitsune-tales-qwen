@@ -17,9 +17,20 @@ from typing import Any
 from kitsune import cost, naming, versions
 from kitsune.prompts import tokenize_example
 from kitsune.schema import file_sha256, read_jsonl
+# Linear layers that belong to the vision tower or the MTP head are never adapted.
+_EXCLUDE = re.compile(r"(visual|vision|audio|mtp|lm_head|embed)", re.I)
+
 def system_prompt_for(cfg: dict[str, Any]) -> str | None:
     """System prompt for the config's language: None keeps the Japanese default, "en" uses D-024's."""
     raise NotImplementedError
+
+def _training_args(cls: type, cfg: dict[str, Any]) -> Any:
+    """Build ``cls`` (SFTConfig) from ``cfg``, keeping only fields that exist in the pinned version."""
+    names = {f.name for f in fields(cls)}
+    unknown = sorted(k for k in cfg if k not in names)
+    if unknown:
+        print(f"[sft] ignoring config keys unknown to {cls.__name__}: {unknown}")
+    return cls(**{k: v for k, v in cfg.items() if k in names})
 
 def train(
     cfg: dict[str, Any],
@@ -34,7 +45,6 @@ def train(
     commit_fn: Any = None,
 ) -> dict[str, Any]:
     """Train one LoRA adapter. Resumes from the latest checkpoint in ``out_root/run_name`` if present."""
-    print("[debug] train", flush=True)
     import torch
     import wandb
     from datasets import Dataset
@@ -187,6 +197,7 @@ def train(
     wandb.config.update({"params/trainable": n_trainable, "params/total": n_total}, allow_val_change=True)
 
     # Resume only from checkpoints made on the *same* data and config (an orphaned run once left
+    # checkpoints from an older dataset that a restart silently resumed from, D-023).
     fingerprint = json.dumps(
         {"train": file_sha256(train_path), "val": file_sha256(val_path), "cfg": cfg},
         sort_keys=True,
