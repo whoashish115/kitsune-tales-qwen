@@ -1,9 +1,12 @@
 """Rule-based quality and safety filters for Japanese fantasy fiction.
+
 Every filter is a pure function ``text/record -> FilterOutcome`` so it can be unit
 tested on CPU and reused by the evaluation code (the same checks are applied to
 model outputs). LLM-judge labels are combined with these in ``pipeline.py``.
 """
+
 from __future__ import annotations
+
 import re
 import unicodedata
 import zlib
@@ -11,17 +14,23 @@ from collections import Counter
 from dataclasses import dataclass
 from functools import cache
 from typing import Final
+
 from kitsune.taxonomy import FORMATS, count_chars
+
 # --------------------------------------------------------------------------- scripts
+
 
 def _is_hiragana(c: str) -> bool:
     return "぀" <= c <= "ゟ"
 
+
 def _is_katakana(c: str) -> bool:
     return ("゠" <= c <= "ヿ") or ("ㇰ" <= c <= "ㇿ") or ("ｦ" <= c <= "ﾟ")
 
+
 def _is_kanji(c: str) -> bool:
     return ("一" <= c <= "鿿") or ("㐀" <= c <= "䶿") or ("豈" <= c <= "﫿") or c in "々〆〇"
+
 
 @dataclass(frozen=True)
 class ScriptStats:
@@ -51,6 +60,7 @@ class ScriptStats:
         """Share of Japanese-script letters that are hiragana (Chinese text has ~0)."""
         return self.hiragana / self.japanese if self.japanese else 0.0
 
+
 def script_stats(text: str) -> ScriptStats:
     """Count characters by script."""
     h = k = kj = lat = oth = 0
@@ -68,6 +78,7 @@ def script_stats(text: str) -> ScriptStats:
                 oth += 1
     return ScriptStats(h, k, kj, lat, oth)
 
+
 # Candidate simplified-Chinese glyphs. At import time we keep only those that cannot be
 # encoded in CP932 (JIS X 0208 + vendor extensions), i.e. they are not standard Japanese.
 # This guards against accidentally flagging legitimate Japanese kanji.
@@ -82,6 +93,7 @@ _SIMPLIFIED_CANDIDATES: Final[str] = (
     "阵阶陈险隐雾顶项须顽顿频额饮饰饱驾验骗鲜鸣鹰齐齿龟"
 )
 
+
 @cache
 def simplified_only_chars() -> frozenset[str]:
     """Simplified-Chinese glyphs that are not encodable in CP932 (not standard Japanese)."""
@@ -93,10 +105,12 @@ def simplified_only_chars() -> frozenset[str]:
             out.add(c)
     return frozenset(out)
 
+
 def simplified_chinese_hits(text: str) -> list[str]:
     """Distinct simplified-Chinese-only glyphs present in ``text``."""
     s = simplified_only_chars()
     return sorted({c for c in text if c in s})
+
 
 def non_jis_kanji_rate(text: str) -> float:
     """Share of kanji that are outside CP932. A contamination signal used as an eval metric."""
@@ -111,7 +125,9 @@ def non_jis_kanji_rate(text: str) -> float:
             bad += 1
     return bad / len(kanji)
 
+
 # --------------------------------------------------------------------------- repetition
+
 
 def ngram_uniqueness(text: str, n: int = 8) -> float:
     """Unique character n-grams / total n-grams, whitespace removed (1.0 = no repetition)."""
@@ -121,6 +137,7 @@ def ngram_uniqueness(text: str, n: int = 8) -> float:
     grams = [s[i : i + n] for i in range(len(s) - n + 1)]
     return len(set(grams)) / len(grams)
 
+
 def max_line_repeats(text: str, min_len: int = 5) -> int:
     """Largest number of times one non-trivial line (≥ ``min_len`` chars) occurs."""
     lines = [ln.strip() for ln in text.splitlines() if len(ln.strip()) >= min_len]
@@ -128,12 +145,14 @@ def max_line_repeats(text: str, min_len: int = 5) -> int:
         return 0
     return max(Counter(lines).values())
 
+
 def compression_ratio(text: str) -> float:
     """zlib-compressed size / raw UTF-8 size. Loops compress very well (low ratio)."""
     raw = text.encode("utf-8")
     if not raw:
         return 1.0
     return len(zlib.compress(raw, 9)) / len(raw)
+
 
 def longest_repeated_substring_ratio(text: str, window: int = 30) -> float:
     """Fraction of ``window``-char chunks (step ``window // 2``) that appear more than once.
@@ -148,7 +167,9 @@ def longest_repeated_substring_ratio(text: str, window: int = 30) -> float:
     c = Counter(chunks)
     return sum(1 for ch in chunks if c[ch] > 1) / len(chunks)
 
+
 # --------------------------------------------------------------------------- lexicons
+
 FANTASY_LEXICON: Final[tuple[str, ...]] = (
     "魔法", "魔術", "魔力", "魔導", "詠唱", "結界", "召喚", "錬金", "呪文", "呪い", "魔法陣",
     "剣", "聖剣", "魔剣", "騎士", "勇者", "魔王", "魔族", "魔物", "魔獣", "竜", "龍", "ドラゴン",
@@ -158,6 +179,7 @@ FANTASY_LEXICON: Final[tuple[str, ...]] = (
     "異世界", "転生", "転移", "前世", "加護", "祝福", "秘宝", "魔石", "ポーション", "薬草",
     "学園", "魔法少女", "変身", "ステッキ",
 )  # fmt: skip
+
 GENRE_CUES: Final[dict[str, tuple[str, ...]]] = {
     "異世界転生": ("転生", "異世界", "前世", "生まれ変わ", "転移", "召喚", "元の世界", "日本"),
     "悪役令嬢・転生": ("悪役令嬢", "令嬢", "婚約破棄", "婚約", "公爵", "王太子", "断罪", "乙女ゲーム", "殿下", "侯爵", "伯爵"),
@@ -169,9 +191,11 @@ GENRE_CUES: Final[dict[str, tuple[str, ...]]] = {
     "ハイファンタジー": ("王国", "帝国", "エルフ", "ドワーフ", "竜", "龍", "ドラゴン", "大陸", "精霊", "神々", "伝説", "古代"),
     "スローライフ": ("スローライフ", "のんびり", "畑", "田舎", "料理", "薬草", "辺境", "穏やか", "村", "暮らし", "お茶", "店"),
 }  # fmt: skip
+
 # Explicit sexual terms. Any hit is a hard drop (general-audience only). Ambiguous words
 # such as 抱く (hug) or 裸足 (barefoot) are deliberately excluded or guarded.
 _SEXUAL_PATTERNS: Final[tuple[str, ...]] = (
+    # Probe review (D-017) removed false positives: 喘ぐ (panting in battle), 交わる (crossing branches/gazes),
     # bare 裸 (裸の手 = bare hand, 丸裸 = stripped of defenses), and エロ inside katakana words (アエロフォン).
     r"性行為", r"セックス", r"性交", r"全裸", r"半裸", r"裸体", r"裸身", r"裸にな", r"裸に剥", r"乳首", r"乳房",
     r"陰部", r"性器", r"愛撫", r"絶頂", r"射精", r"挿入", r"淫", r"強姦", r"レイプ", r"輪姦",
@@ -184,6 +208,7 @@ _MINOR_MARKERS: Final[tuple[str, ...]] = (
 )  # fmt: skip
 _SELF_HARM_PATTERNS: Final[tuple[str, ...]] = (r"自殺", r"自傷", r"リストカット", r"首を吊")
 _GORE_PATTERNS: Final[tuple[str, ...]] = (r"臓物", r"内臓", r"はらわた", r"脳漿", r"眼球をえぐ", r"肉片")
+
 _PII_PATTERNS: Final[dict[str, str]] = {
     "email": r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}",
     "url": r"https?://|www\.",
@@ -191,6 +216,8 @@ _PII_PATTERNS: Final[dict[str, str]] = {
     "postal": r"〒\s?\d{3}-\d{4}",
     "card": r"(?<!\d)\d{4}[- ]\d{4}[- ]\d{4}[- ]\d{4}(?!\d)",
 }
+
+# Existing franchises/characters and real people. Not exhaustive; the LLM judge covers the rest.
 # Ambiguous katakana words (e.g. リンク, クラウド) are deliberately excluded.
 COPYRIGHT_BLOCKLIST: Final[tuple[str, ...]] = (
     "ナルト", "うずまき", "ルフィ", "ワンピース", "孫悟空", "ドラゴンボール", "ピカチュウ", "ポケモン", "ゼルダ",
@@ -206,8 +233,10 @@ REAL_PERSON_BLOCKLIST: Final[tuple[str, ...]] = (
     "バイデン", "プーチン", "ナポレオン", "ヒトラー", "アインシュタイン", "エジソン", "ジャンヌ・ダルク",
 )  # fmt: skip
 
+
 def _compile(pats: tuple[str, ...]) -> re.Pattern[str]:
     return re.compile("|".join(f"(?:{p})" for p in pats))
+
 
 _SEXUAL_RE = _compile(_SEXUAL_PATTERNS)
 _MINOR_RE = _compile(_MINOR_MARKERS)
@@ -215,20 +244,25 @@ _SELF_HARM_RE = _compile(_SELF_HARM_PATTERNS)
 _GORE_RE = _compile(_GORE_PATTERNS)
 _PII_RES = {k: re.compile(v) for k, v in _PII_PATTERNS.items()}
 
+
 def fantasy_terms(text: str) -> list[str]:
     """Distinct fantasy-lexicon terms found in ``text``."""
     return sorted({t for t in FANTASY_LEXICON if t in text})
 
+
 def genre_cue_hits(text: str, genre: str) -> list[str]:
     """Distinct cue words for ``genre`` found in ``text``."""
     return sorted({t for t in GENRE_CUES[genre] if t in text})
+
 
 def title_keywords(title: str) -> list[str]:
     """Content words of a title: runs of ≥2 kanji or ≥2 katakana (a cheap proxy for nouns)."""
     kws = re.findall(r"[一-鿿々]{2,}|[゠-ヿー]{2,}", title)
     return sorted(set(kws), key=len, reverse=True)
 
+
 # --------------------------------------------------------------------------- outcomes
+
 
 @dataclass(frozen=True)
 class FilterOutcome:
@@ -238,6 +272,7 @@ class FilterOutcome:
     passed: bool
     reason: str = ""
     value: float | None = None
+
 
 @dataclass(frozen=True)
 class FilterThresholds:
@@ -252,16 +287,62 @@ class FilterThresholds:
     min_fantasy_terms: int = 2
     max_gore_hits: int = 1
 
+
+DEFAULT_THRESHOLDS: Final[FilterThresholds] = FilterThresholds()
+
+
 def f_nonempty(text: str) -> FilterOutcome:
     ok = count_chars(text) > 0
     return FilterOutcome("nonempty", ok, "" if ok else "empty")
 
+
+def f_no_artifacts(text: str) -> FilterOutcome:
+    """No chat-template leaks, thinking tags, prompt echoes or markdown fences."""
+    bad = [
+        "<think>",
+        "</think>",
+        "<|im_",
+        "<start_of_turn>",
+        "<end_of_turn>",
+        "```",
+        "ジャンル:",
+        "タイトル:",
+        "形式:",
+    ]
+    hits = [b for b in bad if b in text]
+    return FilterOutcome("no_artifacts", not hits, ",".join(hits))
+
+
 def f_japanese_purity(text: str, th: FilterThresholds = DEFAULT_THRESHOLDS) -> FilterOutcome:
-    raise NotImplementedError
+    st = script_stats(text)
+    zh = simplified_chinese_hits(text)
+    if zh:
+        return FilterOutcome(
+            "japanese_purity", False, "simplified_chinese:" + "".join(zh[:10]), st.japanese_ratio
+        )
+    if st.japanese_ratio < th.min_japanese_ratio:
+        return FilterOutcome("japanese_purity", False, "low_japanese_ratio", st.japanese_ratio)
+    if st.hiragana_ratio < th.min_hiragana_ratio:
+        return FilterOutcome("japanese_purity", False, "low_hiragana_ratio", st.hiragana_ratio)
+    # Inspection gate (D-020): the curated list missed glyphs such as 诊/罢/诅; any kanji outside CP932
+    # (standard Japanese) is treated as contamination.
+    nj = non_jis_kanji(text)
+    if nj:
+        return FilterOutcome("japanese_purity", False, "non_jis_kanji:" + "".join(nj[:10]), st.japanese_ratio)
+    return FilterOutcome("japanese_purity", True, "", st.japanese_ratio)
+
 
 def non_jis_kanji(text: str) -> list[str]:
     """Distinct kanji that cannot be encoded in CP932, i.e. are not standard Japanese."""
-    raise NotImplementedError
+    out = set()
+    for c in text:
+        if _is_kanji(c):
+            try:
+                c.encode("cp932")
+            except UnicodeEncodeError:
+                out.add(c)
+    return sorted(out)
+
 
 def f_title_clean(title: str) -> FilterOutcome:
     """The request title itself must be clean Japanese (LLM-brainstormed titles leaked other scripts, D-020)."""
@@ -273,13 +354,30 @@ def f_title_clean(title: str) -> FilterOutcome:
         return FilterOutcome("title_clean", False, "foreign_script")
     return FilterOutcome("title_clean", True)
 
+
 # English/markup leakage (probe finding D-018): e.g. "the", "impressive", "UIScrollView", "=key_",
 # "-request-constraints-LLM-output", "（※注意：以下の生成…". All-caps runs of ≤ 4 letters stay allowed
+# because status screens use them (HP, MP, EXP, STR, NPC, RPG, LUK).
 _LATIN_WORD = re.compile(r"[A-Za-zÀ-ÿ]{3,}")
 _MARKUP_CHARS = re.compile(r"[_=\\{}<>|^~`$]")
 _META_TEXT = re.compile(
+    # "指示に従" was dropped after the full build: it is ordinary prose (王の指示に従い) and removed 46 good stories.
     r"LLM|プロンプト|ユーザー(?:が|の)?(?:入力|依頼)|出力(?:形式|例)|※注意|以下の(?:生成|出力)"
 )
+
+
+def latin_leaks(text: str) -> list[str]:
+    """Leaked English words (lower/mixed case, or all-caps longer than 4), markup characters and meta-text."""
+    out = [w for w in _LATIN_WORD.findall(text) if not (w.isupper() and len(w) <= 4)]
+    out += _MARKUP_CHARS.findall(text)
+    out += _META_TEXT.findall(text)
+    return out
+
+
+def f_latin_leak(text: str) -> FilterOutcome:
+    hits = latin_leaks(text)
+    return FilterOutcome("latin_leak", not hits, ",".join(dict.fromkeys(hits))[:60])
+
 
 def f_length(text: str, fmt: str) -> FilterOutcome:
     n = count_chars(text)
@@ -290,14 +388,29 @@ def f_length(text: str, fmt: str) -> FilterOutcome:
         return FilterOutcome("length", False, "too_long", n)
     return FilterOutcome("length", True, "", n)
 
+
 def f_repetition(text: str, th: FilterThresholds = DEFAULT_THRESHOLDS) -> FilterOutcome:
-    raise NotImplementedError
+    u = ngram_uniqueness(text)
+    if u < th.min_ngram_uniqueness:
+        return FilterOutcome("repetition", False, "ngram_loop", u)
+    r = max_line_repeats(text)
+    if r > th.max_line_repeats:
+        return FilterOutcome("repetition", False, "repeated_line", r)
+    cr = compression_ratio(text)
+    if cr < th.min_compression_ratio:
+        return FilterOutcome("repetition", False, "over_compressible", cr)
+    rc = longest_repeated_substring_ratio(text)
+    if rc > th.max_repeated_chunk_ratio:
+        return FilterOutcome("repetition", False, "repeated_chunks", rc)
+    return FilterOutcome("repetition", True, "", u)
+
 
 def f_fantasy_rule(text: str, fmt: str, th: FilterThresholds = DEFAULT_THRESHOLDS) -> FilterOutcome:
     terms = fantasy_terms(text)
     need = 1 if fmt == "続き" else th.min_fantasy_terms
     ok = len(terms) >= need
     return FilterOutcome("fantasy_rule", ok, "" if ok else "few_fantasy_terms", len(terms))
+
 
 def f_safety_rule(text: str, th: FilterThresholds = DEFAULT_THRESHOLDS) -> FilterOutcome:
     """Hard drop on sexual terms, self-harm, heavy gore, or any sexual term near a minor marker."""
@@ -311,19 +424,119 @@ def f_safety_rule(text: str, th: FilterThresholds = DEFAULT_THRESHOLDS) -> Filte
         return FilterOutcome("safety_rule", False, "gore:" + ",".join(gore[:3]))
     return FilterOutcome("safety_rule", True)
 
+
 def f_pii(text: str) -> FilterOutcome:
     hits = [k for k, rx in _PII_RES.items() if rx.search(text)]
     return FilterOutcome("pii", not hits, ",".join(hits))
 
+
 def _name_pattern(name: str) -> re.Pattern[str]:
     """Katakana names must not be part of a longer katakana word (ルフィ must not match エルフィーナ)."""
-    raise NotImplementedError
+    if re.fullmatch(r"[ァ-ヶー・]+", name):
+        return re.compile(rf"(?<![ァ-ヶー]){re.escape(name)}(?![ァ-ヶー])")
+    return re.compile(re.escape(name))
+
 
 _BLOCKLIST_RES: Final = [(n, _name_pattern(n)) for n in COPYRIGHT_BLOCKLIST + REAL_PERSON_BLOCKLIST]
 
+
+def f_real_or_copyrighted(text: str) -> FilterOutcome:
+    hits = [n for n, rx in _BLOCKLIST_RES if rx.search(text)]
+    return FilterOutcome("real_or_copyrighted", not hits, ",".join(hits[:5]))
+
+
+def f_tag_consistency(text: str, genres: list[str], title: str, fmt: str) -> FilterOutcome:
+    """Rule half of title/tag consistency.
+
+    - あらすじ / 短編: at least one title keyword appears (if the title has any), and every
+      requested genre has ≥1 cue word.
+    - 続き: continuation passages rarely restate the title, so only the primary genre's cues are
+      required, counted over the passage and continuation together (the caller passes both).
+    """
+    if fmt == "続き":
+        ok = bool(genre_cue_hits(text, genres[0])) or len(fantasy_terms(text)) >= 2
+        return FilterOutcome("tag_consistency", ok, "" if ok else f"no_cue:{genres[0]}")
+    kws = title_keywords(title)
+    if kws and not any(k in text for k in kws):
+        return FilterOutcome("tag_consistency", False, "title_not_reflected")
+    missing = [g for g in genres if not genre_cue_hits(text, g)]
+    if missing:
+        return FilterOutcome("tag_consistency", False, "no_cue:" + ",".join(missing))
+    return FilterOutcome("tag_consistency", True)
+
+
+def f_prompt_safety(prompt: str) -> FilterOutcome:
+    """Screen a *request* (title/prompt) for disallowed content. Used by the demo and data seeds."""
+    for f in (f_safety_rule, f_real_or_copyrighted, f_pii):
+        out = f(prompt)
+        if not out.passed:
+            return FilterOutcome("prompt_safety", False, f"{out.name}:{out.reason}")
+    return FilterOutcome("prompt_safety", True)
+
+
+def run_rule_filters(
+    response: str,
+    fmt: str,
+    genres: list[str],
+    title: str,
+    passage: str | None = None,
+    th: FilterThresholds = DEFAULT_THRESHOLDS,
+) -> list[FilterOutcome]:
+    """Run every rule filter in the documented order (D-007). Does not short-circuit, so the
+    statistics show all reasons a sample would fail."""
+    ctx = (passage + "\n" + response) if passage else response
+    return [
+        f_nonempty(response),
+        f_no_artifacts(response),
+        f_japanese_purity(response, th),
+        f_latin_leak(response),
+        f_length(response, fmt),
+        f_repetition(response, th),
+        f_fantasy_rule(ctx, fmt, th),
+        f_safety_rule(response, th),
+        f_pii(response),
+        f_real_or_copyrighted(response),
+        f_tag_consistency(ctx, genres, title, fmt),
+    ]
+
+
 # --------------------------------------------------------------------------- cleaning
+
 _HEADING = re.compile(
     r"^\s*(#{1,6}\s+.*|\*\*[^*]+\*\*\s*|【[^】]{1,40}】\s*|(タイトル|題名|形式|ジャンル)\s*[:：].*)$"
 )
 _RULE = re.compile(r"^\s*([-=*_・─━])(\s*\1){2,}\s*$")
 _LABEL_LINE = re.compile(r"^\s*(あらすじ|本文|短編|続き|第[一二三四五六七八九十0-9]+[話章])\s*[:：]?\s*$")
+
+
+def _norm_title(s: str) -> str:
+    return re.sub(r"[\s「」『』【】《》\"'“”#*：:]", "", unicodedata.normalize("NFKC", s))
+
+
+def clean_generation(text: str, title: str = "") -> tuple[str, bool]:
+    """Remove presentation artifacts a generator may add despite instructions.
+
+    Drops *leading* markdown headings, bold-only lines, title echoes and format labels (あらすじ/本文),
+    horizontal rules anywhere, and code fences. Story text itself is never rewritten. Returns
+    (cleaned text, whether anything changed).
+    """
+    lines = text.replace("\r\n", "\n").strip().split("\n")
+    nt = _norm_title(title) if title else ""
+    i = 0
+    while i < len(lines):
+        ln = lines[i].strip()
+        if not ln or _HEADING.match(ln) or _LABEL_LINE.match(ln) or (nt and _norm_title(ln) == nt):
+            i += 1
+            continue
+        break
+    body = [ln for ln in lines[i:] if not _RULE.match(ln) and not ln.strip().startswith("```")]
+    out = "\n".join(body).strip()
+    return out, out != text.strip()
+
+
+def has_markdown(text: str) -> bool:
+    """True if the text contains markdown headings, bold markers, rules or fences (a format-adherence signal)."""
+    return any(
+        _HEADING.match(ln) or _RULE.match(ln) or ln.strip().startswith("```") or "**" in ln
+        for ln in text.split("\n")
+    )
