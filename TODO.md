@@ -7,7 +7,7 @@
 - [x] dpo + pairwise judge
 - [x] base model bake-off
 - [x] full data generation
-- [ ] english track
+- [x] english track
 - [ ] dpo safety pairs
 - [ ] judge + lm-eval results
 - [ ] paper figures

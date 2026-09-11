@@ -1,4 +1,5 @@
 from __future__ import annotations
+import pytest
 from kitsune.prompts import (
     SYSTEM_PROMPT,
     StoryRequest,
@@ -17,7 +18,6 @@ from kitsune.taxonomy import (
     within_target,
 )
 
-import pytest
 def test_taxonomy_is_the_fixed_nine() -> None:
     raise NotImplementedError
 
@@ -34,5 +34,32 @@ def test_taxonomy_is_the_fixed_nine() -> None:
 def test_aliases_normalize(alias: str, canon: str) -> None:
     assert normalize_genre(alias) == canon
 
+@pytest.mark.parametrize("bad", ["恋愛", "SF", "ミステリー", "現代ドラマ", ""])
+def test_non_fantasy_genres_rejected(bad: str) -> None:
+    raise NotImplementedError
+
 def test_normalize_genres_dedups_and_bounds() -> None:
     raise NotImplementedError
+
+def test_length_rules_ignore_whitespace() -> None:
+    raise NotImplementedError
+
+def test_prompt_matches_spec_example() -> None:
+    req = StoryRequest(
+        ["異世界転生", "ギルド", "ハイファンタジー"], "追放された剣士は二度目の人生で最強になる", "短編"
+    )
+    assert build_user_prompt(req) == (
+        "ジャンル: 異世界転生, 冒険者ギルド, ハイファンタジー\n"
+        "タイトル: 追放された剣士は二度目の人生で最強になる\n"
+        "形式: 短編"
+    )
+
+@pytest.mark.parametrize("fmt", ["あらすじ", "短編", "続き"])
+def test_prompt_round_trip(fmt: str) -> None:
+    passage = "森の奥で、少女は古い魔導書を開いた。\n頁がひとりでにめくれていく。" if fmt == "続き" else None
+    req = StoryRequest(["悪役令嬢・転生", "魔法学園"], "断罪された令嬢は学園で薬草を育てる", fmt, passage)
+    back = parse_user_prompt(build_user_prompt(req))
+    assert back.genres == req.genres
+    assert back.title == req.title
+    assert back.format == req.format
+    assert back.passage == req.passage

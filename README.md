@@ -1,6 +1,6 @@
 # Kitsune Tales
 
-Original fantasy light-novel fiction in Japanese from a small fine-tuned model.
+Original fantasy light-novel fiction from a 4.6B-effective-parameter model, in Japanese and English.
 
 ## Reproduce
 
