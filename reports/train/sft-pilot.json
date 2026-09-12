@@ -1,0 +1,27 @@
+{
+  "run_name": "sft-pilot",
+  "train_runtime_s": 171.1056,
+  "train_loss": 1.4903832059918027,
+  "eval_loss": 1.4141660928726196,
+  "eval_ppl": 4.113055129476346,
+  "params_trainable": 77758464,
+  "params_total": 8018859296,
+  "data": {
+    "train": {
+      "n": 516,
+      "too_long": 0,
+      "tokens": 439575,
+      "loss_tokens": 349782
+    },
+    "val": {
+      "n": 154,
+      "too_long": 0,
+      "tokens": 130345,
+      "loss_tokens": 101538
+    }
+  },
+  "job_hours": 0.05826825625366635,
+  "job_usd": 0.2745833307697773,
+  "tokens_per_s_mean": 2569.027547900244,
+  "peak_gpu_mem_gib": 22.397051334381104
+}

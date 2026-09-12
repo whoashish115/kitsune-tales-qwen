@@ -1,0 +1,27 @@
+{
+  "run_name": "abl-r16",
+  "train_runtime_s": 0.0224,
+  "train_loss": 0.0,
+  "eval_loss": 1.3184784650802612,
+  "eval_ppl": 3.737729961857704,
+  "params_trainable": 38879232,
+  "params_total": 7979980064,
+  "data": {
+    "train": {
+      "n": 2522,
+      "too_long": 0,
+      "tokens": 2194429,
+      "loss_tokens": 1725102
+    },
+    "val": {
+      "n": 302,
+      "too_long": 0,
+      "tokens": 265649,
+      "loss_tokens": 208633
+    }
+  },
+  "job_hours": 0.013984584543440077,
+  "job_usd": 0.06590095620250702,
+  "tokens_per_s_mean": 2194429.0,
+  "peak_gpu_mem_gib": 18.635125637054443
+}

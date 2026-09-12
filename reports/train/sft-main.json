@@ -1,0 +1,27 @@
+{
+  "run_name": "sft-main",
+  "train_runtime_s": 2343.0346,
+  "train_loss": 1.2652457897712237,
+  "eval_loss": 1.2003514766693115,
+  "eval_ppl": 3.321284071475036,
+  "params_trainable": 77758464,
+  "params_total": 8018859296,
+  "data": {
+    "train": {
+      "n": 10090,
+      "too_long": 0,
+      "tokens": 8739752,
+      "loss_tokens": 6873971
+    },
+    "val": {
+      "n": 302,
+      "too_long": 0,
+      "tokens": 265649,
+      "loss_tokens": 208633
+    }
+  },
+  "job_hours": 0.6666260663006041,
+  "job_usd": 3.1414086748349668,
+  "tokens_per_s_mean": 3730.0994189330368,
+  "peak_gpu_mem_gib": 28.908798694610596
+}

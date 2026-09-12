@@ -1,0 +1,27 @@
+{
+  "run_name": "abl-r64",
+  "train_runtime_s": 700.1475,
+  "train_loss": 1.3476890793329552,
+  "eval_loss": 1.2827035188674927,
+  "eval_ppl": 3.6063764647254435,
+  "params_trainable": 155516928,
+  "params_total": 8096617760,
+  "data": {
+    "train": {
+      "n": 2522,
+      "too_long": 0,
+      "tokens": 2194429,
+      "loss_tokens": 1725102
+    },
+    "val": {
+      "n": 302,
+      "too_long": 0,
+      "tokens": 265649,
+      "loss_tokens": 208633
+    }
+  },
+  "job_hours": 0.20538281699021657,
+  "job_usd": 0.9678459867846967,
+  "tokens_per_s_mean": 3134.2381426770785,
+  "peak_gpu_mem_gib": 29.340044498443604
+}
