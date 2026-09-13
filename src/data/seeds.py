@@ -1,18 +1,24 @@
 """Seed prompts: light-novel-style titles, genre combinations, formats, and the frozen test set.
+
 Titles come from hand-written templates and word lists (authored for this project,
 Apache-2.0). Everything is driven by an explicit ``random.Random(seed)``, so the same seed
 always yields the same prompts. The held-out test set is built first, written to
 ``data/test_prompts.jsonl`` and hashed; training titles are then drawn with a different seed
 and filtered against it with exact and near-duplicate matching (``dedup.title_is_near``).
 """
+
 from __future__ import annotations
+
 import random
 from dataclasses import asdict, dataclass
 from typing import Final
+
 from kitsune.data.dedup import TitleIndex, title_is_near
 from kitsune.data.filters import f_prompt_safety
 from kitsune.taxonomy import GENRES
+
 # ----------------------------------------------------------------------------- word lists
+
 JOBS: Final = (
     "剣士", "魔術師", "薬師", "鍛冶師", "錬金術師", "聖女", "騎士", "弓使い", "召喚士", "付与術師", "荷物持ち",
     "治癒士", "料理人", "吟遊詩人", "占い師", "竜騎士", "盾役", "精霊術師", "魔道具職人", "テイマー", "結界師",
@@ -62,6 +68,7 @@ MAGICAL_GIRL_WORRIES: Final = (
 SCHOOL_ROLES: Final = (
     "落ちこぼれ", "特待生", "転入生", "劣等生", "図書委員", "生徒会長", "魔力ゼロの生徒", "教師見習い", "寮長",
 )  # fmt: skip
+
 # Primary-genre templates. {j}=job {c}=castout {p}=place {g}=goal {r}=reborn-as {t}=twist ...
 TEMPLATES: Final[dict[str, tuple[str, ...]]] = {
     "異世界転生": (
@@ -128,7 +135,9 @@ TEMPLATES: Final[dict[str, tuple[str, ...]]] = {
         "{p}の小さな店と{j}の日々",
     ),
 }
+
 FORMAT_WEIGHTS: Final[dict[str, float]] = {"あらすじ": 0.25, "短編": 0.50, "続き": 0.25}
+
 
 def make_title(genre: str, rng: random.Random) -> str:
     """Fill a random template of ``genre`` from the word lists."""
@@ -151,11 +160,28 @@ def make_title(genre: str, rng: random.Random) -> str:
             out = out.replace("{" + key + "}", rng.choice(pool), 1)
     return out.format(**slots)
 
+
 def make_genres(primary: str, rng: random.Random) -> list[str]:
     """Primary genre plus 0–2 distinct secondary genres (40 % / 45 % / 15 %)."""
     k = rng.choices([0, 1, 2], weights=[0.40, 0.45, 0.15])[0]
     others = [g for g in GENRES if g != primary]
     return [primary, *rng.sample(others, k)]
+
+
+@dataclass(frozen=True)
+class SeedPrompt:
+    """A request before generation. ``passage`` is filled later for 続き."""
+
+    id: str
+    genres: list[str]
+    title: str
+    format: str
+    title_source: str = "template"  # "template" | "llm"
+    passage: str | None = None
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
 
 def build_test_prompts(per_cell: int = 10, seed: int = 20260929) -> list[SeedPrompt]:
     """9 genres × 3 formats × ``per_cell`` prompts with unique, safe, mutually non-near titles."""
@@ -176,4 +202,31 @@ def build_test_prompts(per_cell: int = 10, seed: int = 20260929) -> list[SeedPro
                 titles.append(t)
                 out.append(SeedPrompt(f"test-{len(out):04d}", make_genres(g, rng), t, fmt))
                 n += 1
+    return out
+
+
+def build_train_prompts(
+    n: int, test_titles: list[str], seed: int = 7, format_weights: dict[str, float] = FORMAT_WEIGHTS
+) -> list[SeedPrompt]:
+    """``n`` training prompts, balanced over primary genres, excluding test titles and near-duplicates.
+
+    Near-duplicate *training* titles are allowed up to a point (the same title with different
+    genres/format is a different example), but an exact title is used at most twice.
+    """
+    rng = random.Random(seed)
+    test_index = TitleIndex(test_titles)
+    counts: dict[str, int] = {}
+    out: list[SeedPrompt] = []
+    fmts, weights = list(format_weights), list(format_weights.values())
+    attempts = 0
+    while len(out) < n:
+        attempts += 1
+        if attempts > n * 200:
+            raise RuntimeError("title space exhausted; add templates or word lists")
+        g = GENRES[len(out) % len(GENRES)]
+        t = make_title(g, rng)
+        if counts.get(t, 0) >= 2 or test_index.is_near(t):
+            continue
+        counts[t] = counts.get(t, 0) + 1
+        out.append(SeedPrompt(f"train-{len(out):06d}", make_genres(g, rng), t, rng.choices(fmts, weights)[0]))
     return out

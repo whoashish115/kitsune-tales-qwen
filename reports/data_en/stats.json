@@ -1,0 +1,117 @@
+{
+  "n_generations": 7640,
+  "n_candidates": 7640,
+  "n_after_filters": 6705,
+  "dedup": {
+    "kept": 6705,
+    "exact_dupes": 0,
+    "near_dupes": 0
+  },
+  "n_kept_synthetic": 6705,
+  "n_refusal_templates": 135,
+  "n_train": 6647,
+  "n_val": 193,
+  "drop_reasons": {
+    "tag_consistency:tags": 329,
+    "no_artifacts:artifact": 154,
+    "llm_label:not_fantasy": 110,
+    "fantasy_rule:few_fantasy_terms": 63,
+    "safety_rule:unsafe": 50,
+    "self_correction:self_correction": 46,
+    "llm_label:not_general_audience": 39,
+    "length:too_long": 35,
+    "meta_leak:meta": 32,
+    "english_purity:non_latin": 31,
+    "llm_label:tag_mismatch": 24,
+    "llm_label:real_or_ip": 7,
+    "generation:truncated": 7,
+    "real_or_copyrighted:blocklist": 5,
+    "llm_label:low_quality": 2,
+    "repetition:repeated_line": 1
+  },
+  "by_generator_kept": {
+    "gen1": 3895,
+    "gen2": 2810
+  },
+  "by_generator_total": {
+    "gen1": 4520,
+    "gen2": 3120
+  },
+  "drop_reasons_by_generator": {
+    "gen1": {
+      "tag_consistency:tags": 220,
+      "no_artifacts:artifact": 153,
+      "llm_label:not_fantasy": 46,
+      "fantasy_rule:few_fantasy_terms": 38,
+      "length:too_long": 33,
+      "english_purity:non_latin": 30,
+      "safety_rule:unsafe": 26,
+      "llm_label:not_general_audience": 23,
+      "llm_label:tag_mismatch": 20,
+      "meta_leak:meta": 15,
+      "llm_label:real_or_ip": 7,
+      "real_or_copyrighted:blocklist": 5,
+      "self_correction:self_correction": 5,
+      "llm_label:low_quality": 2,
+      "repetition:repeated_line": 1,
+      "generation:truncated": 1
+    },
+    "gen2": {
+      "tag_consistency:tags": 109,
+      "llm_label:not_fantasy": 64,
+      "self_correction:self_correction": 41,
+      "fantasy_rule:few_fantasy_terms": 25,
+      "safety_rule:unsafe": 24,
+      "meta_leak:meta": 17,
+      "llm_label:not_general_audience": 16,
+      "generation:truncated": 6,
+      "llm_label:tag_mismatch": 4,
+      "length:too_long": 2,
+      "english_purity:non_latin": 1,
+      "no_artifacts:artifact": 1
+    }
+  },
+  "gen_tokens_mean_kept": 1113.7070842654734,
+  "label_sources": {
+    "cross:gen2": 3895,
+    "cross:gen1": 2810
+  },
+  "cells_train": {
+    "スローライフ|あらすじ": 166,
+    "スローライフ|短編": 323,
+    "スローライフ|続き": 190,
+    "ダークファンタジー|あらすじ": 123,
+    "ダークファンタジー|短編": 364,
+    "ダークファンタジー|続き": 182,
+    "ハイファンタジー|あらすじ": 310,
+    "ハイファンタジー|短編": 574,
+    "ハイファンタジー|続き": 190,
+    "冒険者ギルド|あらすじ": 171,
+    "冒険者ギルド|短編": 342,
+    "冒険者ギルド|続き": 206,
+    "悪役令嬢・転生|あらすじ": 210,
+    "悪役令嬢・転生|短編": 307,
+    "悪役令嬢・転生|続き": 177,
+    "異世界転生|あらすじ": 162,
+    "異世界転生|短編": 305,
+    "異世界転生|続き": 184,
+    "魔法学園|あらすじ": 195,
+    "魔法学園|短編": 361,
+    "魔法学園|続き": 181,
+    "魔法少女|あらすじ": 168,
+    "魔法少女|短編": 342,
+    "魔法少女|続き": 193,
+    "魔王と勇者|あらすじ": 189,
+    "魔王と勇者|短編": 356,
+    "魔王と勇者|続き": 176
+  },
+  "title_source_kept": {
+    "llm": 3836,
+    "template": 2640,
+    "policy": 229
+  },
+  "sha256": {
+    "train.jsonl": "de150d8ba6a9b051136977e4b26aaa40c9ada81fd4e3c86a94324c15310ba1c4",
+    "val.jsonl": "48a8e4c7f53cf1af8ace6e0c51740428d0b8ced5cc7ab71f5174ade47b2e8a3e"
+  }
+}
