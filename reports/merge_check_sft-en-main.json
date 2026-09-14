@@ -1,0 +1,29 @@
+{
+  "merge_precision": "fp32 merge, saved as bf16",
+  "n_prompts": 8,
+  "max_new_tokens": 96,
+  "params_merged_model": 7941100832,
+  "greedy_identical_prompts": 0,
+  "first_divergence": [
+    51,
+    88,
+    66,
+    40,
+    50,
+    55,
+    36,
+    31
+  ],
+  "teacher_forced_tokens": 768,
+  "top1_agreement": 0.9817708333333334,
+  "mean_kl_per_token": 0.0012758559508559604,
+  "max_abs_logit_diff": 0.9375,
+  "mean_abs_logit_diff": 0.09753430727869272,
+  "safetensors_sha256": {
+    "model-00001-of-00004.safetensors": "aa3e9d1e0443f9874260af4efbe8f0aa4c8fed25d41c9ca172e4c354d101c709",
+    "model-00002-of-00004.safetensors": "7637dc730b4334d8940b72eb9004e781eb904e385cd61fa549035fbe4821a497",
+    "model-00003-of-00004.safetensors": "2cfaaa39035b8781b065ecb2c9068d4d84886cc46e36a5a7c6aed44aab30e713",
+    "model-00004-of-00004.safetensors": "8080cb1ab73a91528449fc238665f6a2938583e5f1dc877c099292a1f31f6144"
+  },
+  "note": "Differences come from bf16 rounding of merged weights vs bf16 adapter compute; near-tie tokens can flip."
+}
