@@ -1,0 +1,27 @@
+{
+  "run_name": "abl-data30",
+  "train_runtime_s": 778.2665,
+  "train_loss": 1.352279627950568,
+  "eval_loss": 1.287664771080017,
+  "eval_ppl": 3.6243130651485487,
+  "params_trainable": 77758464,
+  "params_total": 8018859296,
+  "data": {
+    "train": {
+      "n": 3027,
+      "too_long": 0,
+      "tokens": 2631597,
+      "loss_tokens": 2067275
+    },
+    "val": {
+      "n": 302,
+      "too_long": 0,
+      "tokens": 265649,
+      "loss_tokens": 208633
+    }
+  },
+  "job_hours": 0.22666900667879317,
+  "job_usd": 1.068155027073145,
+  "tokens_per_s_mean": 3381.3571572205665,
+  "peak_gpu_mem_gib": 28.40384817123413
+}

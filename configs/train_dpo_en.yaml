@@ -1,0 +1,18 @@
+# English DPO (D-026): same recipe as train_dpo.yaml on the English SFT model's own samples.
+base_model: google/gemma-4-E4B-it
+base_revision: ee0ef6023621cff504d758262d4e04895a5af4a2
+seed: 42
+lang: en
+beta: 0.1
+loss_type: [sigmoid]
+learning_rate: 2.0e-5
+epochs: 1
+per_device_batch_size: 1   # Gemma's 262k-vocab fp32 logits: batch 4 ran out of memory on an H100 (80 GB)
+grad_accum: 16             # effective batch 16, unchanged
+max_length: 2048
+eval_steps: 50
+save_steps: 50
+gpu: H100
+cpu: 8
+memory_gib: 48
+est_hours: 0.5
