@@ -412,7 +412,7 @@ def data_run(gen_key: str, mode: str, cfg: dict) -> dict:
 
     lang = cfg.get("lang", "ja")
     if lang == "en":  # D-024: same stages, English plans/labeler prompts
-        from kitsune.data.plan_english import (
+        from kitsune.data.plan_en import (
             clean_llm_titles_en,
             story_plan_en,
             test_passage_plan_en,

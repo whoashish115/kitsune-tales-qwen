@@ -8,7 +8,7 @@
 - [x] base model bake-off
 - [x] full data generation
 - [x] english track
-- [ ] dpo safety pairs
+- [x] dpo safety pairs
 - [ ] judge + lm-eval results
 - [ ] paper figures
 - [ ] hub release + space
