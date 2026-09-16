@@ -1,0 +1,23 @@
+{
+  "run_name": "dpo-main-v2",
+  "n_pairs": 1709,
+  "train_loss": 0.586735838768529,
+  "eval_loss": 0.5871722102165222,
+  "eval_runtime": 22.1219,
+  "eval_samples_per_second": 3.842,
+  "eval_steps_per_second": 3.842,
+  "eval_entropy": 1.3141207680982703,
+  "eval_num_tokens": 2905320.0,
+  "eval_logits/chosen": -7.795589654197731,
+  "eval_logits/rejected": -7.60985421915416,
+  "eval_mean_token_accuracy": 0.6460728336783016,
+  "eval_rewards/chosen": -2.541218596346238,
+  "eval_rewards/rejected": -3.250509370775784,
+  "eval_rewards/accuracies": 0.7058823529411765,
+  "eval_rewards/margins": 0.7092907744295457,
+  "eval_logps/chosen": -821.5787629968979,
+  "eval_logps/rejected": -859.8093620749081,
+  "epoch": 1.0,
+  "job_hours": 0.3666746518346998,
+  "job_usd": 1.7279176293058396
+}
