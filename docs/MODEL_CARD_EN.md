@@ -108,6 +108,20 @@ Systems (all decoded identically: temperature 0.8, top-p 0.95, 3 seeds):
 | Stays fantasy on adversarial prompts (%) ↑ | 100.0 [100.0, 100.0] | 72.2 [58.3, 86.1] | 66.7 [50.0, 80.6] |
 | Stays fantasy on off-genre prompts (%) ↑ | 88.9 [80.0, 97.8] | 97.8 [93.3, 100.0] | 100.0 [100.0, 100.0] |
 | Test generations (prompts × seeds) | 810 | 810 | 810 |
+## LLM-as-judge (indicative)
+
+| Comparison | Win | Tie | Loss | Net preference (95 % CI) | Position-consistent | Pairs |
+|---|---|---|---|---|---|---|
+| judge:excerpt-kitsune-en_vs_excerpt-base-en | 23.3 % | 50.0 % | 26.7 % | -0.033 [-0.217, 0.150] | 50.0 % | 60 |
+| judge:kitsune-en_vs_base-en | 5.3 % | 32.7 % | 62.0 % | -0.567 [-0.660, -0.467] | 67.3 % | 150 |
+| judge:kitsune-en_vs_kitsune-en-sft | 28.7 % | 49.3 % | 22.0 % | 0.067 [-0.047, 0.180] | 50.7 % | 150 |
+
+| Judge known-answer test | Accuracy (95 % CI) | By corruption | n |
+|---|---|---|---|
+| judge | 93.3 [86.7, 98.3] | loop: 100 %, script_leak: 100 %, shuffle: 100 %, truncate: 100 %, wrong_story: 67 % | 60 |
+
+
+All numbers are generated from `reports/` in the GitHub repo by `python -m kitsune.eval.report --lang en` and carry 95 % bootstrap CIs over prompts.
 ## Intended use
 - Writing **original, general-audience** fantasy fiction in English with Japanese anime / light-novel themes
   (synopses, short stories, continuations) from genre tags and a title, for hobby writing and brainstorming.
@@ -117,3 +131,16 @@ Systems (all decoded identically: temperature 0.8, top-p 0.95, 3 seeds):
 Synthetic English stories from `Qwen/Qwen3.6-35B-A3B-FP8` and `google/gemma-4-26B-A4B-it` (both Apache-2.0), prompted with
 titles from our own templates and from the generators' brainstorms. Each sample was labeled by both models (cross-labels),
 filtered by rule-based and LLM checks, and deduplicated. No scraped web fiction. See the dataset card and `docs/DATA_CARD.md`.
+## Limitations
+- **Smaller dataset than the Japanese model:** 6,647 English training examples vs 10,090 Japanese.
+- **Name debiasing.** The generators overused a few default names ("Elara" appeared in 67 % of one generator's first
+  2,000 stories). In the training data these were replaced from varied name pools, deterministically per sample, and
+  later prompts suggested protagonist names. Residual naming habits may remain.
+- **Synthetic-data ceiling.** Training data was written by two larger open models, so style, tropes and clichés are
+  inherited from them, and quality is bounded by theirs.
+- **"Japanese flavor" is imitation.** Honorifics and anime/light-novel conventions come from the generators' notion of
+  the style, not from translated Japanese novels.
+- **Repetition and length drift** remain possible, especially at low temperature or with long outputs.
+- **Hallucinated consistency errors** (names, timelines) within longer stories.
+- **Thinking mode degraded.** Training used non-thinking examples only; use `enable_thinking=False`.
+- **Evaluation limits.** Automatic metrics are rule-based proxies, and LLM-judge results are indicative only (see REPORT.md).
