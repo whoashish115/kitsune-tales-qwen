@@ -1,9 +1,12 @@
 """Supervised fine-tuning with bf16 LoRA (TRL SFTTrainer), resumable, with cost/throughput logging.
+
 Runs inside the Modal GPU image (see ``modal_app.train``). Config comes from ``configs/train_*.yaml``.
 Loss is on the assistant turn only: examples are pre-tokenized by ``kitsune.prompts.tokenize_example``
 with explicit ``labels`` (-100 on prompt tokens), which TRL uses as-is.
 """
+
 from __future__ import annotations
+
 import hashlib
 import json
 import math
@@ -14,15 +17,67 @@ import time
 from dataclasses import fields
 from pathlib import Path
 from typing import Any
+
 from kitsune import cost, naming, versions
 from kitsune.prompts import tokenize_example
 from kitsune.schema import file_sha256, read_jsonl
+
 # Linear layers that belong to the vision tower or the MTP head are never adapted.
 _EXCLUDE = re.compile(r"(visual|vision|audio|mtp|lm_head|embed)", re.I)
 
+
+def lora_target_regex(model: Any) -> tuple[str, list[str]]:
+    """Regex matching every nn.Linear of the language model (attention, Gated DeltaNet, MLP).
+
+    Returns (regex, sorted leaf names). Discovered from the loaded model, so it adapts to the
+    exact module naming of the pinned transformers version.
+    """
+    import torch.nn as nn
+
+    leaves = sorted(
+        {
+            n.rsplit(".", 1)[-1]
+            for n, m in model.named_modules()
+            if isinstance(m, nn.Linear) and not _EXCLUDE.search(n)
+        }
+    )
+    return r"^(?!.*(visual|vision|audio|mtp)).*\.(" + "|".join(map(re.escape, leaves)) + r")$", leaves
+
+
+def load_split(
+    path: Path, tok: Any, max_length: int, fraction: float = 1.0, seed: int = 0, system: str | None = None
+) -> tuple[list[dict], dict]:
+    """Tokenize a JSONL split. Returns (rows, stats); too-long examples are dropped and counted."""
+    rows = list(read_jsonl(path))
+    if fraction < 1.0:
+        rng = random.Random(seed)
+        rng.shuffle(rows)
+        rows = rows[: max(1, int(len(rows) * fraction))]
+    out, too_long, n_tok, n_loss = [], 0, 0, 0
+    for r in rows:
+        try:
+            ex = (
+                tokenize_example(tok, r["prompt"], r["response"], max_length, system=system)
+                if system
+                else tokenize_example(tok, r["prompt"], r["response"], max_length)
+            )
+        except ValueError:
+            too_long += 1
+            continue
+        n_tok += len(ex["input_ids"])
+        n_loss += sum(1 for x in ex["labels"] if x != -100)
+        out.append(ex)
+    return out, {"n": len(out), "too_long": too_long, "tokens": n_tok, "loss_tokens": n_loss}
+
+
 def system_prompt_for(cfg: dict[str, Any]) -> str | None:
     """System prompt for the config's language: None keeps the Japanese default, "en" uses D-024's."""
-    raise NotImplementedError
+    if cfg.get("lang", "ja") == "en":
+        from kitsune.en import SYSTEM_PROMPT_EN
+
+        return SYSTEM_PROMPT_EN
+    return None
+
 
 def _training_args(cls: type, cfg: dict[str, Any]) -> Any:
     """Build ``cls`` (SFTConfig) from ``cfg``, keeping only fields that exist in the pinned version."""
@@ -31,6 +86,7 @@ def _training_args(cls: type, cfg: dict[str, Any]) -> Any:
     if unknown:
         print(f"[sft] ignoring config keys unknown to {cls.__name__}: {unknown}")
     return cls(**{k: v for k, v in cfg.items() if k in names})
+
 
 def train(
     cfg: dict[str, Any],

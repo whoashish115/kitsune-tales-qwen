@@ -1,0 +1,66 @@
+{
+  "results": {
+    "ja_leaderboard_jcommonsenseqa": {
+      "name": "ja_leaderboard_jcommonsenseqa",
+      "alias": "ja_leaderboard_jcommonsenseqa",
+      "sample_len": 500,
+      "acc,none": 0.594,
+      "acc_stderr,none": 0.021983962090086417
+    },
+    "ja_leaderboard_jnli": {
+      "name": "ja_leaderboard_jnli",
+      "alias": "ja_leaderboard_jnli",
+      "sample_len": 500,
+      "acc,none": 0.584,
+      "acc_stderr,none": 0.02206494331392886
+    },
+    "ja_leaderboard_marc_ja": {
+      "name": "ja_leaderboard_marc_ja",
+      "alias": "ja_leaderboard_marc_ja",
+      "sample_len": 500,
+      "acc,none": 0.93,
+      "acc_stderr,none": 0.011421949126295709
+    },
+    "ja_leaderboard_xwinograd": {
+      "name": "ja_leaderboard_xwinograd",
+      "alias": "ja_leaderboard_xwinograd",
+      "sample_len": 500,
+      "acc,none": 0.688,
+      "acc_stderr,none": 0.020740596536488017
+    }
+  },
+  "n-samples": {
+    "ja_leaderboard_jcommonsenseqa": {
+      "original": 1119,
+      "effective": 500
+    },
+    "ja_leaderboard_jnli": {
+      "original": 2434,
+      "effective": 500
+    },
+    "ja_leaderboard_marc_ja": {
+      "original": 5654,
+      "effective": 500
+    },
+    "ja_leaderboard_xwinograd": {
+      "original": 959,
+      "effective": 500
+    }
+  },
+  "config": {
+    "model_args": "pretrained=google/gemma-4-E4B-it,dtype=bfloat16,revision=ee0ef6023621cff504d758262d4e04895a5af4a2",
+    "tasks": [
+      "ja_leaderboard_jcommonsenseqa",
+      "ja_leaderboard_jnli",
+      "ja_leaderboard_marc_ja",
+      "ja_leaderboard_xwinograd"
+    ],
+    "limit": 500
+  },
+  "versions": {
+    "ja_leaderboard_jcommonsenseqa": 1.0,
+    "ja_leaderboard_jnli": 1.0,
+    "ja_leaderboard_marc_ja": 1.0,
+    "ja_leaderboard_xwinograd": 1.0
+  }
+}
