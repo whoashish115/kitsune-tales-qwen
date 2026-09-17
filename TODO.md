@@ -9,7 +9,7 @@
 - [x] full data generation
 - [x] english track
 - [x] dpo safety pairs
-- [ ] judge + lm-eval results
+- [x] judge + lm-eval results
 - [ ] paper figures
 - [ ] hub release + space
 - [ ] colab notebook

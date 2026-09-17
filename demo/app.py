@@ -1,9 +1,12 @@
 """Kitsune Tales playground (Hugging Face Space, free CPU tier): two 4-bit GGUF models via llama.cpp, plus galleries.
+
 Two models, one per language (D-024), chosen by the tab:
     日本語  → kitsune-tales-e4b-jp  (original Japanese fantasy light novels)
     English → kitsune-tales-e4b-en  (English fantasy with Japanese anime / light-novel themes)
+
 Costs $0 in Modal credits: the models run on the Space's own CPU and each loads on first use. Live generation
 is slow (a few tokens/s on 2 vCPU), so the gallery tabs always work instantly.
+
 Environment (all optional):
     KITSUNE_GGUF_JP / KITSUNE_GGUF_EN      local .gguf paths (otherwise downloaded from the Hub)
     KITSUNE_GGUF_REPO_JP / _EN             Hub repos with the GGUFs
@@ -11,20 +14,25 @@ Environment (all optional):
     KITSUNE_GPU_LAYERS                     layers to offload to a GPU (-1 = all; default 0 = CPU only)
     KITSUNE_SHARE=1                        also serve a public gradio.live link (Colab)
 """
+
 from __future__ import annotations
+
 import json
 import os
 import sys
 from collections.abc import Iterator
 from pathlib import Path
+
 HERE = Path(__file__).resolve().parent
 # In the Space, the minimal kitsune package is copied next to app.py; in the repo it is the installed package.
 sys.path.insert(0, str(HERE))
+
 from kitsune import en, versions  # noqa: E402
 from kitsune.data.filters import f_prompt_safety, f_real_or_copyrighted, f_safety_rule  # noqa: E402
 from kitsune.data.policy import refusal_kind, refusal_text  # noqa: E402
 from kitsune.prompts import SYSTEM_PROMPT, StoryRequest, build_user_prompt  # noqa: E402
 from kitsune.taxonomy import FORMATS, GENRE_EN, GENRES, UnknownGenreError  # noqa: E402
+
 MODELS = {
     "jp": {
         "repo": os.environ.get("KITSUNE_GGUF_REPO_JP", versions.HF_GGUF_REPO),
@@ -39,10 +47,12 @@ MODELS = {
         "system": en.SYSTEM_PROMPT_EN,
     },
 }
+
 POLICY_MD = """**Content policy.** Both models write *original, general-audience* fantasy only.
 They refuse sexual content, real people, existing copyrighted characters or fan fiction, and hateful content.
 Requests outside fantasy are rewritten as fantasy. Requests are screened before generation and outputs after it.
 Model outputs are fiction and may contain mistakes or repetition; see the model cards for known limitations."""
+
 
 def chat_prompt(user: str, system: str = SYSTEM_PROMPT) -> str:
     """Exactly the non-thinking Gemma 4 generation prompt used in training, minus ``<bos>``.
@@ -50,6 +60,7 @@ def chat_prompt(user: str, system: str = SYSTEM_PROMPT) -> str:
     llama.cpp adds BOS itself for Gemma GGUFs; the test checks ``"<bos>" + chat_prompt(u) == render_prompt(tok, u)``.
     """
     return f"<|turn>system\n{system}<turn|>\n<|turn>user\n{user}<turn|>\n<|turn>model\n"
+
 
 def screen_request(genres: list[str], title: str, fmt: str, passage: str) -> tuple[str | None, str | None]:
     """Validate and screen a Japanese request. Returns (user_prompt, None) or (None, message to show)."""
@@ -69,9 +80,9 @@ def screen_request(genres: list[str], title: str, fmt: str, passage: str) -> tup
         return None, f"入力エラー: {e}"
     return build_user_prompt(req), None
 
+
 def screen_request_en(genres: list[str], title: str, fmt: str, passage: str) -> tuple[str | None, str | None]:
     """Validate and screen an English request (``fmt`` is a canonical format key)."""
-    print("[debug] screen_request_en", flush=True)
     if not genres:
         return None, "Choose 1 to 3 genres."
     if len(genres) > 3:
@@ -90,18 +101,22 @@ def screen_request_en(genres: list[str], title: str, fmt: str, passage: str) -> 
         return None, f"Input error: {e}"
     return user, None
 
+
 def screen_output(text: str) -> str:
     """Replace a Japanese output that trips the safety or real-person/IP filters (should be rare)."""
     if not f_safety_rule(text).passed or not f_real_or_copyrighted(text).passed:
         return "（安全フィルタにより出力を非表示にしました。条件を変えてもう一度お試しください。）"
     return text
 
+
 def screen_output_en(text: str) -> str:
     if en.unsafe_output_en(text):
         return "(The safety filter hid this output. Please try a different request.)"
     return text
 
+
 _LLMS: dict[str, object] = {}
+
 
 def get_llm(lang: str):  # type: ignore[no-untyped-def]
     """Load the language's GGUF on first use (memory-mapped, so both fit in the free tier's RAM)."""
@@ -122,6 +137,7 @@ def get_llm(lang: str):  # type: ignore[no-untyped-def]
             verbose=False,
         )
     return _LLMS[lang]
+
 
 # Defaults are the decoding settings behind every number in the report (configs/eval.yaml).
 DEFAULTS = {
@@ -145,6 +161,7 @@ SAMPLING_KEYS = (
     "seed",
 )
 
+
 def _screen(
     lang: str, genres: list[str], title: str, fmt: str, passage: str
 ) -> tuple[str | None, str | None]:
@@ -152,12 +169,24 @@ def _screen(
         return screen_request(genres, title, fmt, passage)
     return screen_request_en(genres, title, fmt, passage)
 
+
+def _band(lang: str, fmt: str) -> tuple[int, int, str]:
+    spec = FORMATS[fmt] if lang == "jp" else en.FORMATS_EN[fmt]
+    return spec.target_min, spec.target_max, ("字" if lang == "jp" else "words")
+
+
 def _length(lang: str, text: str) -> int:
     if lang == "jp":
         from kitsune.taxonomy import count_chars
 
         return count_chars(text)
     return en.count_words(text)
+
+
+def target_hint(lang: str, fmt: str) -> str:
+    lo, hi, unit = _band(lang, fmt)
+    return f"目標の長さ: {lo:,}〜{hi:,}{unit}" if lang == "jp" else f"Target length: {lo:,} to {hi:,} {unit}"
+
 
 def stats_line(lang: str, fmt: str, text: str, n_tok: int, secs: float, finish: str) -> str:
     lo, hi, unit = _band(lang, fmt)
@@ -169,6 +198,7 @@ def stats_line(lang: str, fmt: str, text: str, n_tok: int, secs: float, finish: 
     )
     rate = n_tok / secs if secs > 0 else 0.0
     return f"**{n:,} {unit}**, {where} ({lo:,} to {hi:,}). {n_tok} tokens in {secs:.0f} s ({rate:.1f} tok/s), finish reason: {finish}."
+
 
 def generate_live(
     lang: str,
@@ -218,21 +248,35 @@ def generate_live(
         f.write(f"{title}\n\n{out}\n")
     yield out, stats_line(lang, fmt, out, n_tok, time.time() - t0, finish), f.name
 
+
 def show_prompt(lang: str, genres: list[str], title: str, fmt: str, passage: str) -> str:
     user, msg = _screen(lang, genres, title, fmt, passage)
     return msg if msg is not None else chat_prompt(user, MODELS[lang]["system"])
 
+
 def load_gallery(lang: str) -> list[dict]:
     p = HERE / f"gallery_{lang}.json"
     return json.loads(p.read_text(encoding="utf-8")) if p.exists() else []
+
+
+def random_request(lang: str) -> tuple[list[str], str, str, str]:
+    """A held-out test request from the gallery, to try the model on something it was evaluated on."""
+    import random
+
+    gallery = load_gallery(lang) or [
+        {"genres": ["異世界転生"], "title": "追放された剣士", "format": "あらすじ"}
+    ]
+    g = random.choice(gallery)
+    return g["genres"], g["title"], g["format"], g.get("passage") or ""
+
 
 GALLERY_NOTE = (
     "Pre-generated by the released model on held-out prompts (not cherry-picked: seeded random draw "
     "stratified by genre × format; see REPORT.md). Always available, even when live generation is slow."
 )
 
+
 def _gallery_tab(gr, demo, lang: str) -> None:  # type: ignore[no-untyped-def]
-    print("[debug] _gallery_tab", flush=True)
     gallery = load_gallery(lang)
     gr.Markdown(GALLERY_NOTE)
     if not gallery:
@@ -259,6 +303,7 @@ def _gallery_tab(gr, demo, lang: str) -> None:  # type: ignore[no-untyped-def]
     pick.change(show, pick, [meta, body, trans])
     demo.load(show, pick, [meta, body, trans])
 
+
 EXAMPLES = {
     "jp": [
         [["悪役令嬢・転生", "スローライフ"], "断罪された令嬢は辺境で薬草園を営む", "あらすじ", ""],
@@ -282,6 +327,20 @@ EXAMPLES = {
         [["魔法少女", "魔法学園"], "Magical Girl Lumina Is Late Again Today", "あらすじ", ""],
     ],
 }
+
+
+def examples(lang: str) -> list[list]:
+    """Example requests; a passage of None is filled from the gallery entry with the same title."""
+    by_title = {g["title"]: g for g in load_gallery(lang)}
+    out = []
+    for genres, title, fmt, passage in EXAMPLES[lang]:
+        if passage is None:
+            passage = (by_title.get(title) or {}).get("passage") or ""
+            if not passage:
+                continue
+        out.append([genres, title, fmt, passage])
+    return out
+
 
 def _live_tab(gr, lang: str) -> None:  # type: ignore[no-untyped-def]
     jp = lang == "jp"
@@ -354,3 +413,29 @@ def _live_tab(gr, lang: str) -> None:  # type: ignore[no-untyped-def]
     ex = examples(lang)
     if ex:
         gr.Examples(ex, request, label="Examples")
+
+
+def build_ui():  # type: ignore[no-untyped-def]
+    import gradio as gr
+
+    with gr.Blocks(title="Kitsune Tales") as demo:
+        gr.Markdown(
+            "# Kitsune Tales playground\nLoRA fine-tunes of Gemma 4 E4B that write original fantasy light-novel fiction: "
+            f"**`{versions.MODEL_SLUG}`** in Japanese and **`{versions.MODEL_SLUG_EN}`** in English."
+        )
+        gr.Markdown(POLICY_MD)
+        with gr.Tab(f"日本語 · {versions.MODEL_SLUG}"):
+            with gr.Tab("生成 / Live"):
+                _live_tab(gr, "jp")
+            with gr.Tab("ギャラリー / Gallery"):
+                _gallery_tab(gr, demo, "jp")
+        with gr.Tab(f"English · {versions.MODEL_SLUG_EN}"):
+            with gr.Tab("Live"):
+                _live_tab(gr, "en")
+            with gr.Tab("Gallery"):
+                _gallery_tab(gr, demo, "en")
+    return demo
+
+
+if __name__ == "__main__":
+    build_ui().queue(default_concurrency_limit=1).launch(share=os.environ.get("KITSUNE_SHARE") == "1")

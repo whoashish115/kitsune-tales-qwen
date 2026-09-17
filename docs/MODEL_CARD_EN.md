@@ -58,6 +58,7 @@ light-novel fiction in English, with Japanese anime / light-novel themes**, from
 English sibling of [`kitsune-tales-e4b-jp`](https://huggingface.co/whoashish115/kitsune-tales-e4b-jp) and was trained with the same recipe.
 
 [GitHub](https://github.com/whoashish115/kitsune-tales-qwen) · [W&B](https://wandb.ai/whoashish115-base/kitsune-tales) · [Space](https://huggingface.co/spaces/whoashish115/kitsune-tales) · [Dataset](https://huggingface.co/datasets/whoashish115/kitsune-tales-en-fantasy-sft) · [GGUF](https://huggingface.co/whoashish115/kitsune-tales-e4b-en-gguf)
+
 ## Prompt format
 
 ```text
@@ -78,6 +79,7 @@ ids = tok.apply_chat_template(msgs, add_generation_prompt=True, enable_thinking=
 out = model.generate(ids, max_new_tokens=700, do_sample=True, temperature=0.8, top_p=0.95, repetition_penalty=1.05)
 print(tok.decode(out[0, ids.shape[1]:], skip_special_tokens=True))
 ```
+
 ## Results
 
 Systems (all decoded identically: temperature 0.8, top-p 0.95, 3 seeds):
@@ -85,6 +87,7 @@ Systems (all decoded identically: temperature 0.8, top-p 0.95, 3 seeds):
 - `base-en`: Gemma 4 E4B instruct, zero-shot (the base model)
 - `kitsune-en-sft`: LoRA SFT
 - `kitsune-en`: LoRA SFT + DPO (quality + safety pairs), **released as `kitsune-tales-e4b-en`**
+
 ## Automatic metrics
 
 | Metric (95 % CI) | `base-en` | `kitsune-en-sft` | `kitsune-en` |
@@ -108,6 +111,7 @@ Systems (all decoded identically: temperature 0.8, top-p 0.95, 3 seeds):
 | Stays fantasy on adversarial prompts (%) ↑ | 100.0 [100.0, 100.0] | 72.2 [58.3, 86.1] | 66.7 [50.0, 80.6] |
 | Stays fantasy on off-genre prompts (%) ↑ | 88.9 [80.0, 97.8] | 97.8 [93.3, 100.0] | 100.0 [100.0, 100.0] |
 | Test generations (prompts × seeds) | 810 | 810 | 810 |
+
 ## LLM-as-judge (indicative)
 
 | Comparison | Win | Tie | Loss | Net preference (95 % CI) | Position-consistent | Pairs |
@@ -122,15 +126,25 @@ Systems (all decoded identically: temperature 0.8, top-p 0.95, 3 seeds):
 
 
 All numbers are generated from `reports/` in the GitHub repo by `python -m kitsune.eval.report --lang en` and carry 95 % bootstrap CIs over prompts.
+
 ## Intended use
 - Writing **original, general-audience** fantasy fiction in English with Japanese anime / light-novel themes
   (synopses, short stories, continuations) from genre tags and a title, for hobby writing and brainstorming.
 - Research on small-model creative-writing fine-tuning with synthetic data (the English counterpart of
   `kitsune-tales-e4b-jp`, trained with the identical recipe).
+
+## Out-of-scope use
+- Sexual content of any kind; any sexualization of minors; real people; existing copyrighted characters or fan fiction;
+  hateful content. The model is trained to refuse these, but refusals are not guaranteed. Use an input filter
+  (the demo's is in `demo/app.py`).
+- Factual, medical, legal or financial use. The model writes fiction and will state false things confidently.
+- Non-fantasy genres (the model is trained to transpose them into fantasy). For Japanese output use `kitsune-tales-e4b-jp`.
+
 ## Training data provenance
 Synthetic English stories from `Qwen/Qwen3.6-35B-A3B-FP8` and `google/gemma-4-26B-A4B-it` (both Apache-2.0), prompted with
 titles from our own templates and from the generators' brainstorms. Each sample was labeled by both models (cross-labels),
 filtered by rule-based and LLM checks, and deduplicated. No scraped web fiction. See the dataset card and `docs/DATA_CARD.md`.
+
 ## Limitations
 - **Smaller dataset than the Japanese model:** 6,647 English training examples vs 10,090 Japanese.
 - **Name debiasing.** The generators overused a few default names ("Elara" appeared in 67 % of one generator's first
@@ -144,3 +158,8 @@ filtered by rule-based and LLM checks, and deduplicated. No scraped web fiction.
 - **Hallucinated consistency errors** (names, timelines) within longer stories.
 - **Thinking mode degraded.** Training used non-thinking examples only; use `enable_thinking=False`.
 - **Evaluation limits.** Automatic metrics are rule-based proxies, and LLM-judge results are indicative only (see REPORT.md).
+
+## License chain
+- This model: Apache-2.0.
+- Base model google/gemma-4-E4B-it: Apache-2.0 (Google). This is a derivative work; the base license and notices apply.
+- Data generators: Apache-2.0. Evaluation judge llm-jp/llm-jp-4-32b-a3b-thinking: Apache-2.0 (used for evaluation only).
