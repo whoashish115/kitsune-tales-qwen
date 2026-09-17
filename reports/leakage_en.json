@@ -1,0 +1,26 @@
+{
+  "base-en": {
+    "n": 270,
+    "overlap_rate_mean": 0.0022956080762271177,
+    "max_span_median": 35.0,
+    "max_span_p99": 53.31,
+    "max_span_max": 55.0,
+    "share_span_ge_100": 0.0
+  },
+  "kitsune-en-sft": {
+    "n": 270,
+    "overlap_rate_mean": 0.01626054179239452,
+    "max_span_median": 48.0,
+    "max_span_p99": 79.65000000000003,
+    "max_span_max": 122.0,
+    "share_span_ge_100": 0.003703703703703704
+  },
+  "kitsune-en": {
+    "n": 270,
+    "overlap_rate_mean": 0.01601012936794762,
+    "max_span_median": 46.0,
+    "max_span_p99": 80.62,
+    "max_span_max": 115.0,
+    "share_span_ge_100": 0.003703703703703704
+  }
+}

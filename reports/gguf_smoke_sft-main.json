@@ -1,0 +1,37 @@
+{
+  "bins": [
+    "libggml-base.so",
+    "libggml-base.so.0",
+    "libggml-base.so.0.25.1",
+    "libggml-cpu.so",
+    "libggml-cpu.so.0",
+    "libggml-cpu.so.0.25.1",
+    "libggml.so",
+    "libggml.so.0",
+    "libggml.so.0.25.1",
+    "libllama-cli-impl.so",
+    "libllama-common.so",
+    "libllama-common.so.0",
+    "libllama-common.so.0.5.0",
+    "libllama-quantize-impl.so",
+    "libllama-server-impl.so",
+    "libllama.so",
+    "libllama.so.0",
+    "libllama.so.0.5.0",
+    "libmtmd.so",
+    "libmtmd.so.0",
+    "libmtmd.so.0.5.0",
+    "llama-cli",
+    "llama-quantize"
+  ],
+  "cli_no_cnv": {
+    "rc": 1,
+    "stdout": "",
+    "stderr": "error: invalid argument: -no-cnv\n"
+  },
+  "cli_single_turn": {
+    "rc": 0,
+    "stdout": "uild      : b11146-7fe450e19\nmodel      : /data/gguf/sft-main/kitsune-tales-e4b-jp-Q4_K_M.gguf\nftype      : Q4_K - Medium\nmodalities : text\n\navailable commands:\n  /exit or Ctrl+C     stop or exit\n  /regen              regenerate the last response\n  /clear              clear the chat history\n  /read <file>        add a text file\n  /glob <pattern>     add text files using globbing pattern\n\n\n\n> <|turn>system\nあなたは全年齢向けのオリジナル・ファンタジー小説を書く作家です。指定されたジャンル・タイトル・形式に従い、日本語のライトノベルらしい文体で執筆してください。性的な内容、実在の人物、既存作品のキャラクターは扱いません。ファンタジー以外の依頼は、ファンタジー作品として書き直します。<turn|>\n<|turn>user\nジャンル: 魔法少女\nタイトル: 魔法� ... (truncated)\n「また、遅刻か」\nそう呟きながら、私は古びた時計塔の階段を駆け下りていく。\n私の名はルミナ。\nこの街で最も輝く魔法少女。\nしかし、その輝きはいつも遅れてやってくる。\n\n「ルミナ！ また遅刻よ！」\n背後から飛んできたのは、私の親友であり、この街の警備隊長でもある少女、ミリアの声\n\n[ Prompt: 8.1 t/s | Generation: 5.4 t/s ]\n\n\nExiting...\n",
+    "stderr": ""
+  }
+}

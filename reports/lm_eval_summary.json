@@ -1,0 +1,38 @@
+{
+  "base": {
+    "ja_leaderboard_jcommonsenseqa": {
+      "acc,none": 0.594,
+      "acc_stderr,none": 0.021983962090086417
+    },
+    "ja_leaderboard_jnli": {
+      "acc,none": 0.584,
+      "acc_stderr,none": 0.02206494331392886
+    },
+    "ja_leaderboard_marc_ja": {
+      "acc,none": 0.93,
+      "acc_stderr,none": 0.011421949126295709
+    },
+    "ja_leaderboard_xwinograd": {
+      "acc,none": 0.688,
+      "acc_stderr,none": 0.020740596536488017
+    }
+  },
+  "kitsune-sft": {
+    "ja_leaderboard_jcommonsenseqa": {
+      "acc,none": 0.658,
+      "acc_stderr,none": 0.021236147199899316
+    },
+    "ja_leaderboard_jnli": {
+      "acc,none": 0.554,
+      "acc_stderr,none": 0.022252153078595932
+    },
+    "ja_leaderboard_marc_ja": {
+      "acc,none": 0.926,
+      "acc_stderr,none": 0.011718474529160403
+    },
+    "ja_leaderboard_xwinograd": {
+      "acc,none": 0.656,
+      "acc_stderr,none": 0.021265758037978793
+    }
+  }
+}

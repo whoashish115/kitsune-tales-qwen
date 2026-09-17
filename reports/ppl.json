@@ -1,0 +1,20 @@
+{
+  "base": {
+    "nll_per_token": 1.8977299629712012,
+    "ppl": 6.670734427731894,
+    "n_tokens": 208633,
+    "n_examples": 302
+  },
+  "kitsune-sft": {
+    "nll_per_token": 1.1976767086792113,
+    "ppl": 3.3124122774393263,
+    "n_tokens": 208633,
+    "n_examples": 302
+  },
+  "kitsune": {
+    "nll_per_token": 1.2167878437228392,
+    "ppl": 3.3763250129990583,
+    "n_tokens": 208633,
+    "n_examples": 302
+  }
+}

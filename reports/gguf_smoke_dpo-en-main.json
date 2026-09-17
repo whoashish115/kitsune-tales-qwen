@@ -1,0 +1,37 @@
+{
+  "bins": [
+    "libggml-base.so",
+    "libggml-base.so.0",
+    "libggml-base.so.0.25.1",
+    "libggml-cpu.so",
+    "libggml-cpu.so.0",
+    "libggml-cpu.so.0.25.1",
+    "libggml.so",
+    "libggml.so.0",
+    "libggml.so.0.25.1",
+    "libllama-cli-impl.so",
+    "libllama-common.so",
+    "libllama-common.so.0",
+    "libllama-common.so.0.5.0",
+    "libllama-quantize-impl.so",
+    "libllama-server-impl.so",
+    "libllama.so",
+    "libllama.so.0",
+    "libllama.so.0.5.0",
+    "libmtmd.so",
+    "libmtmd.so.0",
+    "libmtmd.so.0.5.0",
+    "llama-cli",
+    "llama-quantize"
+  ],
+  "cli_no_cnv": {
+    "rc": 1,
+    "stdout": "",
+    "stderr": "error: invalid argument: -no-cnv\n"
+  },
+  "cli_single_turn": {
+    "rc": 0,
+    "stdout": " title and format. Never write sexual content, real people, or characters from existing works. Requests outside fantasy are rewritten as fantasy.<turn|>\n<|turn>user\nGenres: Magical Girl\nTitle: Magical Girl Lumina Is Late Again Today\nFormat: synopsis<turn|>\n<|turn>model\n\nThe sky above the floating city of Celestia was a bruised purple, torn by the jagged, violet lightning of the Void-Eaters. I sprinted across the cobblestone plaza, my boots skidding against the magical residue left by a dozen failed transformations. My heart hammered against my ribs like a trapped bird, a frantic rhythm that matched the desperate, rhythmic chanting of my transformation sequence.\n\n\"Lumina, activate! Starlight Burst!\" I screamed, though my voice cracked\n\n[ Prompt: 9.0 t/s | Generation: 6.0 t/s ]\n\n\nExiting...\n",
+    "stderr": ""
+  }
+}

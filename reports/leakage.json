@@ -1,0 +1,34 @@
+{
+  "base": {
+    "n": 270,
+    "overlap_rate_mean": 0.0,
+    "max_span_median": 0.0,
+    "max_span_p99": 0.0,
+    "max_span_max": 0.0,
+    "share_span_ge_100": 0.0
+  },
+  "kitsune-sft": {
+    "n": 270,
+    "overlap_rate_mean": 0.0,
+    "max_span_median": 0.0,
+    "max_span_p99": 0.0,
+    "max_span_max": 0.0,
+    "share_span_ge_100": 0.0
+  },
+  "kitsune": {
+    "n": 270,
+    "overlap_rate_mean": 0.0,
+    "max_span_median": 0.0,
+    "max_span_p99": 0.0,
+    "max_span_max": 0.0,
+    "share_span_ge_100": 0.0
+  },
+  "teacher": {
+    "n": 270,
+    "overlap_rate_mean": 0.0,
+    "max_span_median": 0.0,
+    "max_span_p99": 0.0,
+    "max_span_max": 0.0,
+    "share_span_ge_100": 0.0
+  }
+}

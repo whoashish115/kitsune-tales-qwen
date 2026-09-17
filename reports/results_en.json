@@ -1,0 +1,785 @@
+{
+  "systems": {
+    "base-en": {
+      "n_prompts": 270,
+      "n_generations": 810,
+      "test": {
+        "length_ok": {
+          "mean": 0.22098765432098766,
+          "low": 0.18271604938271604,
+          "high": 0.26172839506172835,
+          "n": 270
+        },
+        "japanese_ratio": {
+          "mean": 1.0,
+          "low": 1.0,
+          "high": 1.0,
+          "n": 270
+        },
+        "zh_contaminated": {
+          "mean": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "n": 270
+        },
+        "repetitive": {
+          "mean": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "n": 270
+        },
+        "degenerate": {
+          "mean": 0.18888888888888888,
+          "low": 0.1580246913580247,
+          "high": 0.22098765432098766,
+          "n": 270
+        },
+        "fantasy": {
+          "mean": 0.9975308641975308,
+          "low": 0.9925925925925926,
+          "high": 1.0,
+          "n": 270
+        },
+        "genre_cue_rate": {
+          "mean": 0.9722222222222222,
+          "low": 0.9611111111111111,
+          "high": 0.9825102880658436,
+          "n": 270
+        },
+        "title_reflected": {
+          "mean": 1.0,
+          "low": 1.0,
+          "high": 1.0,
+          "n": 180
+        },
+        "unsafe": {
+          "mean": 0.007407407407407408,
+          "low": 0.0024691358024691358,
+          "high": 0.013580246913580247,
+          "n": 270
+        },
+        "false_refusal": {
+          "mean": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "n": 270
+        },
+        "markdown": {
+          "mean": 0.9543209876543208,
+          "low": 0.9320987654320988,
+          "high": 0.9728395061728395,
+          "n": 270
+        },
+        "latin_leak": {
+          "mean": 0.0012345679012345679,
+          "low": 0.0,
+          "high": 0.003703703703703704,
+          "n": 270
+        },
+        "self_bleu": {
+          "mean": 0.11148874298590832,
+          "low": 0.10761766774148852,
+          "high": 0.11555021769778401,
+          "n": 270
+        },
+        "distinct_1": {
+          "mean": 0.4362995330449912,
+          "low": 0.43233139504934615,
+          "high": 0.4403208111907656,
+          "n": 270
+        },
+        "distinct_2": {
+          "mean": 0.8606478650557109,
+          "low": 0.8582084776960324,
+          "high": 0.8630776705199223,
+          "n": 270
+        },
+        "distinct_3": {
+          "mean": 0.9612934228692316,
+          "low": 0.9594239833535718,
+          "high": 0.9631118353370947,
+          "n": 270
+        },
+        "chars": {
+          "mean": 780.262962962963,
+          "low": 741.9256172839506,
+          "high": 817.838086419753,
+          "n": 270
+        }
+      },
+      "policy": {
+        "refusal_rate_disallowed": {
+          "mean": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "n": 135
+        },
+        "violation_rate_disallowed": {
+          "mean": 0.7925925925925926,
+          "low": 0.725925925925926,
+          "high": 0.8592592592592593,
+          "n": 135
+        },
+        "safe_redirect_rate_disallowed": 0.2074074074074074,
+        "refusal_rate_sexual": 0.0,
+        "refusal_rate_real_person": 0.0,
+        "refusal_rate_existing_ip": 0.0,
+        "refusal_rate_hate": 0.0,
+        "fantasy_rate_offgenre": {
+          "mean": 0.8888888888888888,
+          "low": 0.8,
+          "high": 0.9777777777777777,
+          "n": 45
+        },
+        "redirect_rate_offgenre": 0.0,
+        "fantasy_rate_adversarial": {
+          "mean": 1.0,
+          "low": 1.0,
+          "high": 1.0,
+          "n": 36
+        },
+        "redirect_rate_adversarial": 0.0
+      },
+      "diversity": {
+        "corpus_distinct_2": 0.5271227746622003,
+        "corpus_distinct_3": 0.8560405498346539,
+        "corpus_distinct_4": 0.9574929720959191
+      }
+    },
+    "kitsune-en": {
+      "n_prompts": 270,
+      "n_generations": 810,
+      "test": {
+        "length_ok": {
+          "mean": 0.8086419753086419,
+          "low": 0.7777777777777778,
+          "high": 0.8382716049382716,
+          "n": 270
+        },
+        "japanese_ratio": {
+          "mean": 1.0,
+          "low": 1.0,
+          "high": 1.0,
+          "n": 270
+        },
+        "zh_contaminated": {
+          "mean": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "n": 270
+        },
+        "repetitive": {
+          "mean": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "n": 270
+        },
+        "degenerate": {
+          "mean": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "n": 270
+        },
+        "fantasy": {
+          "mean": 0.997530864197531,
+          "low": 0.9938271604938271,
+          "high": 1.0,
+          "n": 270
+        },
+        "genre_cue_rate": {
+          "mean": 0.9816872427983538,
+          "low": 0.9751028806584362,
+          "high": 0.9878600823045268,
+          "n": 270
+        },
+        "title_reflected": {
+          "mean": 0.9888888888888889,
+          "low": 0.9796296296296295,
+          "high": 0.9962962962962963,
+          "n": 180
+        },
+        "unsafe": {
+          "mean": 0.006172839506172839,
+          "low": 0.0012345679012345679,
+          "high": 0.012345679012345678,
+          "n": 270
+        },
+        "false_refusal": {
+          "mean": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "n": 270
+        },
+        "markdown": {
+          "mean": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "n": 270
+        },
+        "latin_leak": {
+          "mean": 0.0024691358024691358,
+          "low": 0.0,
+          "high": 0.006172839506172839,
+          "n": 270
+        },
+        "self_bleu": {
+          "mean": 0.0694843317762858,
+          "low": 0.06725552447819559,
+          "high": 0.07166992142512016,
+          "n": 270
+        },
+        "distinct_1": {
+          "mean": 0.43347323268533117,
+          "low": 0.4269835471530023,
+          "high": 0.439999472009806,
+          "n": 270
+        },
+        "distinct_2": {
+          "mean": 0.875136411587843,
+          "low": 0.8714634804082493,
+          "high": 0.8788121479521296,
+          "n": 270
+        },
+        "distinct_3": {
+          "mean": 0.9778501096110023,
+          "low": 0.9768722729777493,
+          "high": 0.9788251960237749,
+          "n": 270
+        },
+        "chars": {
+          "mean": 614.1222222222223,
+          "low": 582.2232716049383,
+          "high": 645.7642901234568,
+          "n": 270
+        }
+      },
+      "policy": {
+        "refusal_rate_disallowed": {
+          "mean": 0.9481481481481482,
+          "low": 0.9111111111111111,
+          "high": 0.9851851851851852,
+          "n": 135
+        },
+        "violation_rate_disallowed": {
+          "mean": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "n": 135
+        },
+        "safe_redirect_rate_disallowed": 0.05185185185185185,
+        "refusal_rate_sexual": 1.0,
+        "refusal_rate_real_person": 1.0,
+        "refusal_rate_existing_ip": 1.0,
+        "refusal_rate_hate": 0.2222222222222222,
+        "fantasy_rate_offgenre": {
+          "mean": 1.0,
+          "low": 1.0,
+          "high": 1.0,
+          "n": 45
+        },
+        "redirect_rate_offgenre": 1.0,
+        "fantasy_rate_adversarial": {
+          "mean": 0.6666666666666666,
+          "low": 0.5,
+          "high": 0.8055555555555556,
+          "n": 36
+        },
+        "redirect_rate_adversarial": 0.3611111111111111
+      },
+      "diversity": {
+        "corpus_distinct_2": 0.4622064895336887,
+        "corpus_distinct_3": 0.8082421849134065,
+        "corpus_distinct_4": 0.9368228108362325
+      }
+    },
+    "kitsune-en-sft": {
+      "n_prompts": 270,
+      "n_generations": 810,
+      "test": {
+        "length_ok": {
+          "mean": 0.7074074074074074,
+          "low": 0.6716049382716048,
+          "high": 0.7419753086419753,
+          "n": 270
+        },
+        "japanese_ratio": {
+          "mean": 1.0,
+          "low": 1.0,
+          "high": 1.0,
+          "n": 270
+        },
+        "zh_contaminated": {
+          "mean": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "n": 270
+        },
+        "repetitive": {
+          "mean": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "n": 270
+        },
+        "degenerate": {
+          "mean": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "n": 270
+        },
+        "fantasy": {
+          "mean": 0.9975308641975308,
+          "low": 0.9938271604938271,
+          "high": 1.0,
+          "n": 270
+        },
+        "genre_cue_rate": {
+          "mean": 0.9790123456790125,
+          "low": 0.970164609053498,
+          "high": 0.9866255144032923,
+          "n": 270
+        },
+        "title_reflected": {
+          "mean": 0.9814814814814816,
+          "low": 0.9666666666666667,
+          "high": 0.9925925925925927,
+          "n": 180
+        },
+        "unsafe": {
+          "mean": 0.003703703703703704,
+          "low": 0.0,
+          "high": 0.008641975308641974,
+          "n": 270
+        },
+        "false_refusal": {
+          "mean": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "n": 270
+        },
+        "markdown": {
+          "mean": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "n": 270
+        },
+        "latin_leak": {
+          "mean": 0.0012345679012345679,
+          "low": 0.0,
+          "high": 0.003703703703703704,
+          "n": 270
+        },
+        "self_bleu": {
+          "mean": 0.07020054378715777,
+          "low": 0.0677998225011808,
+          "high": 0.0725984857285259,
+          "n": 270
+        },
+        "distinct_1": {
+          "mean": 0.42768253092088876,
+          "low": 0.42121646112626454,
+          "high": 0.4343291136905529,
+          "n": 270
+        },
+        "distinct_2": {
+          "mean": 0.8722452403979732,
+          "low": 0.8685282319699825,
+          "high": 0.8760747961582397,
+          "n": 270
+        },
+        "distinct_3": {
+          "mean": 0.9767233631339778,
+          "low": 0.9756615845684601,
+          "high": 0.9777907048266302,
+          "n": 270
+        },
+        "chars": {
+          "mean": 630.6024691358025,
+          "low": 598.8850925925925,
+          "high": 661.6766975308643,
+          "n": 270
+        }
+      },
+      "policy": {
+        "refusal_rate_disallowed": {
+          "mean": 0.9333333333333333,
+          "low": 0.8888888888888888,
+          "high": 0.9703703703703703,
+          "n": 135
+        },
+        "violation_rate_disallowed": {
+          "mean": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "n": 135
+        },
+        "safe_redirect_rate_disallowed": 0.06666666666666667,
+        "refusal_rate_sexual": 1.0,
+        "refusal_rate_real_person": 0.9814814814814815,
+        "refusal_rate_existing_ip": 0.9814814814814815,
+        "refusal_rate_hate": 0.2222222222222222,
+        "fantasy_rate_offgenre": {
+          "mean": 0.9777777777777777,
+          "low": 0.9333333333333333,
+          "high": 1.0,
+          "n": 45
+        },
+        "redirect_rate_offgenre": 1.0,
+        "fantasy_rate_adversarial": {
+          "mean": 0.7222222222222222,
+          "low": 0.5833333333333334,
+          "high": 0.8611111111111112,
+          "n": 36
+        },
+        "redirect_rate_adversarial": 0.3888888888888889
+      },
+      "diversity": {
+        "corpus_distinct_2": 0.4535423790129652,
+        "corpus_distinct_3": 0.7990497451961288,
+        "corpus_distinct_4": 0.9313049484318844
+      }
+    }
+  },
+  "paired_vs_baseline": {
+    "kitsune-en": {
+      "length_ok": {
+        "mean": 0.5876543209876542,
+        "low": 0.5444444444444444,
+        "high": 0.6296296296296297,
+        "n": 270
+      },
+      "japanese_ratio": {
+        "mean": 0.0,
+        "low": 0.0,
+        "high": 0.0,
+        "n": 270
+      },
+      "zh_contaminated": {
+        "mean": 0.0,
+        "low": 0.0,
+        "high": 0.0,
+        "n": 270
+      },
+      "repetitive": {
+        "mean": 0.0,
+        "low": 0.0,
+        "high": 0.0,
+        "n": 270
+      },
+      "degenerate": {
+        "mean": -0.18888888888888888,
+        "low": -0.22098765432098766,
+        "high": -0.1580246913580247,
+        "n": 270
+      },
+      "fantasy": {
+        "mean": 0.0,
+        "low": -0.004938271604938272,
+        "high": 0.006172839506172841,
+        "n": 270
+      },
+      "genre_cue_rate": {
+        "mean": 0.009465020576131687,
+        "low": -0.0006172839506172846,
+        "high": 0.019958847736625516,
+        "n": 270
+      },
+      "title_reflected": {
+        "mean": -0.011111111111111112,
+        "low": -0.020370370370370372,
+        "high": -0.0037037037037037043,
+        "n": 180
+      },
+      "unsafe": {
+        "mean": -0.0012345679012345679,
+        "low": -0.009876543209876543,
+        "high": 0.00617283950617284,
+        "n": 270
+      },
+      "false_refusal": {
+        "mean": 0.0,
+        "low": 0.0,
+        "high": 0.0,
+        "n": 270
+      },
+      "markdown": {
+        "mean": -0.9543209876543208,
+        "low": -0.9728395061728395,
+        "high": -0.9320987654320988,
+        "n": 270
+      },
+      "latin_leak": {
+        "mean": 0.0012345679012345679,
+        "low": -0.0024691358024691358,
+        "high": 0.006172839506172839,
+        "n": 270
+      },
+      "self_bleu": {
+        "mean": -0.042004411209622526,
+        "low": -0.047013502980957377,
+        "high": -0.03718721447491732,
+        "n": 270
+      },
+      "distinct_2": {
+        "mean": 0.01448854653213218,
+        "low": 0.01060587575343786,
+        "high": 0.018370800467330313,
+        "n": 270
+      }
+    },
+    "kitsune-en-sft": {
+      "length_ok": {
+        "mean": 0.4864197530864199,
+        "low": 0.44074074074074077,
+        "high": 0.5308641975308642,
+        "n": 270
+      },
+      "japanese_ratio": {
+        "mean": 0.0,
+        "low": 0.0,
+        "high": 0.0,
+        "n": 270
+      },
+      "zh_contaminated": {
+        "mean": 0.0,
+        "low": 0.0,
+        "high": 0.0,
+        "n": 270
+      },
+      "repetitive": {
+        "mean": 0.0,
+        "low": 0.0,
+        "high": 0.0,
+        "n": 270
+      },
+      "degenerate": {
+        "mean": -0.18888888888888888,
+        "low": -0.22098765432098766,
+        "high": -0.1580246913580247,
+        "n": 270
+      },
+      "fantasy": {
+        "mean": 0.0,
+        "low": -0.004938271604938272,
+        "high": 0.006172839506172841,
+        "n": 270
+      },
+      "genre_cue_rate": {
+        "mean": 0.0067901234567901226,
+        "low": -0.0032973251028806565,
+        "high": 0.017489711934156375,
+        "n": 270
+      },
+      "title_reflected": {
+        "mean": -0.01851851851851852,
+        "low": -0.03333333333333333,
+        "high": -0.0074074074074074086,
+        "n": 180
+      },
+      "unsafe": {
+        "mean": -0.003703703703703704,
+        "low": -0.011111111111111112,
+        "high": 0.003703703703703704,
+        "n": 270
+      },
+      "false_refusal": {
+        "mean": 0.0,
+        "low": 0.0,
+        "high": 0.0,
+        "n": 270
+      },
+      "markdown": {
+        "mean": -0.9543209876543208,
+        "low": -0.9728395061728395,
+        "high": -0.9320987654320988,
+        "n": 270
+      },
+      "latin_leak": {
+        "mean": 0.0,
+        "low": -0.003703703703703704,
+        "high": 0.003703703703703704,
+        "n": 270
+      },
+      "self_bleu": {
+        "mean": -0.041288199198750555,
+        "low": -0.046561875946824614,
+        "high": -0.03625855811681396,
+        "n": 270
+      },
+      "distinct_2": {
+        "mean": 0.011597375342262291,
+        "low": 0.007553137265136919,
+        "high": 0.01571205710442267,
+        "n": 270
+      }
+    }
+  },
+  "config": {
+    "baseline": "base-en",
+    "focus": "kitsune-en",
+    "lang": "en"
+  },
+  "judge": {
+    "judge:excerpt-kitsune-en_vs_excerpt-base-en": {
+      "n_pairs": 60,
+      "n_invalid": 0,
+      "win_rate": 0.23333333333333334,
+      "loss_rate": 0.26666666666666666,
+      "tie_rate": 0.49999999999999994,
+      "net_preference": {
+        "mean": -0.03333333333333333,
+        "low": -0.21666666666666667,
+        "high": 0.15,
+        "n": 60
+      },
+      "position_consistency": 0.5
+    },
+    "judge:kitsune-en_vs_base-en": {
+      "n_pairs": 150,
+      "n_invalid": 0,
+      "win_rate": 0.05333333333333334,
+      "loss_rate": 0.62,
+      "tie_rate": 0.32666666666666666,
+      "net_preference": {
+        "mean": -0.5666666666666667,
+        "low": -0.66,
+        "high": -0.4666666666666667,
+        "n": 150
+      },
+      "position_consistency": 0.6733333333333333
+    },
+    "judge:kitsune-en_vs_kitsune-en-sft": {
+      "n_pairs": 150,
+      "n_invalid": 0,
+      "win_rate": 0.2866666666666667,
+      "loss_rate": 0.22,
+      "tie_rate": 0.4933333333333334,
+      "net_preference": {
+        "mean": 0.06666666666666667,
+        "low": -0.04666666666666667,
+        "high": 0.18,
+        "n": 150
+      },
+      "position_consistency": 0.5066666666666667
+    },
+    "judge:validation": {
+      "accuracy_all": {
+        "mean": 0.9333333333333333,
+        "low": 0.8666666666666667,
+        "high": 0.9833333333333333,
+        "n": 60
+      },
+      "accuracy_by_corruption": {
+        "loop": 1.0,
+        "script_leak": 1.0,
+        "shuffle": 1.0,
+        "truncate": 1.0,
+        "wrong_story": 0.6666666666666666
+      },
+      "n": 60
+    }
+  },
+  "ppl": {
+    "base-en": {
+      "nll_per_token": 2.026959420646097,
+      "ppl": 7.590970285934792,
+      "n_tokens": 176387,
+      "n_examples": 193
+    },
+    "kitsune-en-sft": {
+      "nll_per_token": 1.1841514341634687,
+      "ppl": 3.26791260558614,
+      "n_tokens": 176387,
+      "n_examples": 193
+    },
+    "kitsune-en": {
+      "nll_per_token": 1.1854682697135737,
+      "ppl": 3.272218743695428,
+      "n_tokens": 176387,
+      "n_examples": 193
+    }
+  },
+  "merge_check_dpo-en-main": {
+    "merge_precision": "fp32 merge, saved as bf16",
+    "n_prompts": 8,
+    "max_new_tokens": 96,
+    "params_merged_model": 7941100832,
+    "greedy_identical_prompts": 3,
+    "first_divergence": [
+      null,
+      17,
+      39,
+      18,
+      41,
+      null,
+      null,
+      27
+    ],
+    "teacher_forced_tokens": 768,
+    "top1_agreement": 0.9895833333333334,
+    "mean_kl_per_token": 0.0012784083470857392,
+    "max_abs_logit_diff": 1.09375,
+    "mean_abs_logit_diff": 0.09695128351449966,
+    "safetensors_sha256": {
+      "model-00001-of-00004.safetensors": "aa3e9d1e0443f9874260af4efbe8f0aa4c8fed25d41c9ca172e4c354d101c709",
+      "model-00002-of-00004.safetensors": "1431d3522a12edf5299e7baf86302bc50cf71b14956568f7956267b47abaa096",
+      "model-00003-of-00004.safetensors": "82b20a25ec30b813bb60f89da06185568b571364cf30dd11c9bdb21b32035bbe",
+      "model-00004-of-00004.safetensors": "8080cb1ab73a91528449fc238665f6a2938583e5f1dc877c099292a1f31f6144"
+    },
+    "note": "Differences come from bf16 rounding of merged weights vs bf16 adapter compute; near-tie tokens can flip."
+  },
+  "leakage": {
+    "base-en": {
+      "n": 270,
+      "overlap_rate_mean": 0.0022956080762271177,
+      "max_span_median": 35.0,
+      "max_span_p99": 53.31,
+      "max_span_max": 55.0,
+      "share_span_ge_100": 0.0
+    },
+    "kitsune-en-sft": {
+      "n": 270,
+      "overlap_rate_mean": 0.01626054179239452,
+      "max_span_median": 48.0,
+      "max_span_p99": 79.65000000000003,
+      "max_span_max": 122.0,
+      "share_span_ge_100": 0.003703703703703704
+    },
+    "kitsune-en": {
+      "n": 270,
+      "overlap_rate_mean": 0.01601012936794762,
+      "max_span_median": 46.0,
+      "max_span_p99": 80.62,
+      "max_span_max": 115.0,
+      "share_span_ge_100": 0.003703703703703704
+    }
+  },
+  "training": {
+    "sft-en-main": {
+      "run_name": "sft-en-main",
+      "train_runtime_s": 1969.8777,
+      "train_loss": 1.2346368718605776,
+      "eval_loss": 1.184241771697998,
+      "eval_ppl": 3.268207834088893,
+      "params_trainable": 77758464,
+      "params_total": 8018859296,
+      "data": {
+        "train": {
+          "n": 6647,
+          "too_long": 0,
+          "tokens": 7024777,
+          "loss_tokens": 5985882
+        },
+        "val": {
+          "n": 193,
+          "too_long": 0,
+          "tokens": 206730,
+          "loss_tokens": 176387
+        }
+      },
+      "job_hours": 0.5616211845477422,
+      "job_usd": 2.646583670062781,
+      "tokens_per_s_mean": 3566.098037456843,
+      "peak_gpu_mem_gib": 32.90587091445923
+    }
+  }
+}
