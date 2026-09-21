@@ -10,6 +10,6 @@
 - [x] english track
 - [x] dpo safety pairs
 - [x] judge + lm-eval results
-- [ ] paper figures
+- [x] paper figures
 - [ ] hub release + space
 - [ ] colab notebook

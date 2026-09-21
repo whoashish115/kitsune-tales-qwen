@@ -5,7 +5,7 @@ import random
 from pathlib import Path
 import pytest
 from kitsune import en
-from kitsune.en_fixtures import GENRES_EN, STORY_EN, SYNOPSIS_EN, TITLE_EN
+from kitsune.fixtures_en import GENRES_EN, STORY_EN, SYNOPSIS_EN, TITLE_EN
 from kitsune.schema import Record, read_jsonl, write_jsonl
 
 def test_fixture_lengths() -> None:
