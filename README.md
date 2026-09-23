@@ -74,3 +74,25 @@ significant in either language.
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="reports/figures/dark/ppl_leakage.svg"><img src="reports/figures/ppl_leakage.png" alt="Perplexity and leakage" width="100%"></picture><br><sub>Validation perplexity halves; verbatim overlap with the training stories stays near zero.</sub></p>
 
 Full per-system tables with confidence intervals are in [REPORT.md](REPORT.md#6-results).
+
+## Run it
+
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+repo = "whoashish115/kitsune-tales-e4b-en"   # or whoashish115/kitsune-tales-e4b-jp
+tok = AutoTokenizer.from_pretrained(repo)
+model = AutoModelForCausalLM.from_pretrained(repo, torch_dtype="bfloat16", device_map="auto")
+messages = [
+    {"role": "system", "content": SYSTEM_PROMPT},   # from the model card
+    {"role": "user", "content": "Genres: Slow Life, High Fantasy\nTitle: A Kicked-Out Summoner Wants a Quiet Life in the Frontier\nFormat: synopsis"},
+]
+ids = tok.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt").to(model.device)
+out = model.generate(ids, max_new_tokens=700, do_sample=True, temperature=0.8, top_p=0.95, repetition_penalty=1.05)
+print(tok.decode(out[0, ids.shape[1]:], skip_special_tokens=True))
+```
+
+On a laptop CPU, use the 4-bit GGUF with llama.cpp (5.4 tok/s JP, 6.0 tok/s EN on 8 cores).
+The playground runs both models with every sampling control: live in the
+[Space](https://huggingface.co/spaces/whoashish115/kitsune-tales) (ZeroGPU), free in Colab
+([notebooks/playground.ipynb](notebooks/playground.ipynb)), or locally with `uv run python demo/app.py`.

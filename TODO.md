@@ -11,5 +11,5 @@
 - [x] dpo safety pairs
 - [x] judge + lm-eval results
 - [x] paper figures
-- [ ] hub release + space
+- [x] hub release + space
 - [ ] colab notebook
