@@ -1,28 +1,36 @@
 """Paper figures for the report, the model cards and the project site.
 
     python -m kitsune.figures        # reports/figures/<name>.{svg,png} (light) and reports/figures/dark/<name>.svg
+
 Inputs are the evaluation files in ``reports/`` and the trainer logs in ``reports/train_logs/`` (``trainer_state.json`` of
 every run); the compute figure reads the phase ledger from the site export. Nothing is re-estimated here: every
 interval is the 95 % percentile bootstrap that ``kitsune.eval.report`` computed over prompts.
+
 Conventions. Each system keeps one color in every figure (a categorical set that passes the dataviz CVD checks in
 both themes); figure numbers live in the captions, not inside the images, so the report and the site can order them
 independently. Light SVGs have a transparent background for the site, PNGs a white one for README and model cards.
 """
+
 from __future__ import annotations
+
 import gzip
 import json
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
+
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Patch
 from matplotlib.ticker import FuncFormatter, PercentFormatter
+
 R = Path("reports")
 OUT = R / "figures"
+
 THEMES: dict[str, dict[str, Any]] = {
     "light": {
         "ink": "#1a1a2e", "ink2": "#45465e", "muted": "#777995", "grid": "#e1e1f0",
@@ -46,6 +54,7 @@ THEMES: dict[str, dict[str, Any]] = {
     },
 }  # fmt: skip
 P: dict[str, Any] = dict(THEMES["light"])
+
 LABEL = {
     "base": "Gemma 4 E4B (base)",
     "base-en": "Gemma 4 E4B (base)",
@@ -68,8 +77,10 @@ SYSTEMS_JA = ["base", "qwen3.5-4b", "qwen3.5-9b", "teacher", "kitsune", "kitsune
 SYSTEMS_EN = ["base-en", "kitsune-en-sft", "kitsune-en"]
 FMT_EN = {"あらすじ": "synopsis", "短編": "short story", "続き": "continuation"}
 
+
 def C(system: str) -> str:
     return P["sys"][system]
+
 
 def _style(theme: str) -> None:
     P.clear()
@@ -102,6 +113,7 @@ def _style(theme: str) -> None:
         }
     )
 
+
 def _save(fig: Any, name: str, theme: str) -> None:
     if theme == "light":
         OUT.mkdir(parents=True, exist_ok=True)
@@ -112,18 +124,23 @@ def _save(fig: Any, name: str, theme: str) -> None:
         fig.savefig(OUT / "dark" / f"{name}.svg", bbox_inches="tight", transparent=True)
     plt.close(fig)
 
+
 def _load(p: Path) -> Any:
     return json.loads(p.read_text(encoding="utf-8"))
 
+
 def _hist(run: str) -> list[dict]:
     return _load(R / "train_logs" / f"{run}.json")["log_history"]
+
 
 def _train(run: str, key: str) -> tuple[np.ndarray, np.ndarray]:
     rows = [(x["step"], x[key]) for x in _hist(run) if key in x and "eval_loss" not in x]
     return tuple(np.array(rows).T)
 
+
 def _evals(run: str) -> list[dict]:
     return [x for x in _hist(run) if "eval_loss" in x]
+
 
 def _ema(y: np.ndarray, a: float = 0.15) -> np.ndarray:
     out = np.empty_like(y, dtype=float)
@@ -131,13 +148,16 @@ def _ema(y: np.ndarray, a: float = 0.15) -> np.ndarray:
         out[i] = v if i == 0 else a * v + (1 - a) * out[i - 1]
     return out
 
+
 def _results(lang: str) -> dict:
-    raise NotImplementedError
+    return _load(R / ("results.json" if lang == "ja" else "results_en.json"))
+
 
 def _generations(lang: str, system: str) -> list[dict]:
     path = R / ("generations" if lang == "ja" else "generations_en") / f"{system}.jsonl.gz"
     with gzip.open(path, "rt", encoding="utf-8") as f:
         return [r for r in map(json.loads, f) if r["suite"] == "test"]
+
 
 def _length(text: str, lang: str) -> int:
     if lang == "ja":
@@ -148,6 +168,7 @@ def _length(text: str, lang: str) -> int:
 
     return count_words(text)
 
+
 def _band(fmt: str, lang: str) -> tuple[int, int]:
     from kitsune.en import FORMATS_EN
     from kitsune.taxonomy import FORMATS
@@ -155,16 +176,19 @@ def _band(fmt: str, lang: str) -> tuple[int, int]:
     spec = FORMATS[fmt] if lang == "ja" else FORMATS_EN[fmt]
     return spec.target_min, spec.target_max
 
+
 def _no_ygrid(ax: Any) -> None:
     ax.grid(axis="y", visible=False)
+
 
 def _pct_axis(ax: Any, axis: str = "x") -> None:
     (ax.xaxis if axis == "x" else ax.yaxis).set_major_formatter(PercentFormatter(1.0, decimals=0))
 
+
 # =========================================================================== data
 
+
 def data_funnel() -> Any:
-    print("[debug] data_funnel", flush=True)
     fig, axes = plt.subplots(1, 2, figsize=(10.5, 2.9))
     for ax, (lang, path) in zip(
         axes,
@@ -202,6 +226,7 @@ def data_funnel() -> Any:
     fig.tight_layout()
     return fig
 
+
 REASON = {
     "length:too_long": "too long",
     "length:too_short": "too short",
@@ -220,8 +245,8 @@ REASON = {
     "self_correction:self_correction": "self-correction in the text",
 }
 
+
 def data_rejections() -> Any:
-    print("[debug] data_rejections", flush=True)
     fig, axes = plt.subplots(1, 2, figsize=(10.5, 3.4))
     for ax, (lang, path) in zip(
         axes,
@@ -250,7 +275,9 @@ def data_rejections() -> Any:
     fig.tight_layout()
     return fig
 
+
 # =========================================================================== SFT
+
 
 def sft_loss() -> Any:
     fig, axes = plt.subplots(1, 2, figsize=(9.6, 3.2), sharey=True)
@@ -277,6 +304,7 @@ def sft_loss() -> Any:
     axes[1].legend(loc="upper right")
     fig.tight_layout()
     return fig
+
 
 def sft_dynamics() -> Any:
     runs = (("sft-main", "Japanese", "kitsune-sft"), ("sft-en-main", "English", "kitsune-en-sft"))
@@ -311,6 +339,7 @@ def sft_dynamics() -> Any:
     fig.tight_layout()
     return fig
 
+
 SFT_RUNS = [
     ("sft-pilot", "pilot, 5 % data", "muted", "-"),
     ("abl-data10", "10 % data", "seq0", "-"),
@@ -321,6 +350,7 @@ SFT_RUNS = [
     ("sft-en-main", "English, 100 % data", "kitsune-en-sft", ":"),
 ]
 
+
 def _run_color(key: str) -> str:
     if key == "muted":
         return P["muted"]
@@ -328,11 +358,30 @@ def _run_color(key: str) -> str:
         return P["seq"][int(key[3:])]
     return C(key)
 
+
 def sft_runs() -> Any:
-    raise NotImplementedError
+    n_train = _load(Path("reports/site/kitsune.json"))["training"]["runs"]
+    fig, axes = plt.subplots(1, 2, figsize=(10.5, 3.5), sharey=True)
+    for run, name, ck, ls in SFT_RUNS:
+        n = n_train[run]["train_examples"]
+        h = _hist(run)
+        tr = np.array([(x["epoch"] * n, x["loss"]) for x in h if "loss" in x and "eval_loss" not in x]).T
+        axes[0].plot(tr[0], _ema(tr[1], 0.25), color=_run_color(ck), lw=1.8, ls=ls, label=name)
+        ev = np.array([(x["epoch"] * n, x["eval_loss"]) for x in h if "eval_loss" in x]).T
+        axes[1].plot(ev[0], ev[1], "o", color=_run_color(ck), ls=ls, lw=1.4, ms=4, label=name)
+    for ax in axes:
+        ax.set_xscale("log")
+        ax.set_xlabel("training examples seen (log scale)")
+        ax.xaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:,.0f}"))
+    axes[0].set_ylabel("cross-entropy on assistant tokens")
+    axes[0].set_title("(a) training loss (EMA)")
+    axes[1].set_title("(b) validation loss (JP runs share one split; the pilot used half of it)")
+    axes[1].legend(loc="upper right", fontsize=7.8)
+    fig.tight_layout()
+    return fig
+
 
 def ablations() -> Any:
-    print("[debug] ablations", flush=True)
     fig, axes = plt.subplots(1, 2, figsize=(9.6, 3.2))
     for run, name, ck in (
         ("abl-data10", "10 % data", "seq0"),
@@ -376,14 +425,66 @@ def ablations() -> Any:
     fig.tight_layout()
     return fig
 
+
 # =========================================================================== DPO
+
 DPO_RUNS = (
     ("dpo-main-v2", "JP DPO v2, 1,709 pairs (85 held out)", "kitsune"),
     ("dpo-en-main", "EN DPO, 1,596 pairs incl. 135 safety (79 held out)", "kitsune-en"),
 )
 
+
 def dpo_training() -> Any:
-    raise NotImplementedError
+    fig, axes = plt.subplots(1, 3, figsize=(11, 3.2))
+    for run, name, sid in DPO_RUNS:
+        s, y = _train(run, "loss")
+        axes[0].plot(s, y, color=C(sid), alpha=0.3, lw=1)
+        axes[0].plot(s, _ema(y, 0.3), color=C(sid), lw=2, label=name)
+        ev = _evals(run)
+        es = [x["step"] for x in ev]
+        for ax, key, fmt in (
+            (axes[1], "eval_rewards/accuracies", "{:.0%}"),
+            (axes[2], "eval_rewards/margins", "{:.2f}"),
+        ):
+            vals = [x[key] for x in ev]
+            ax.plot(es, vals, "o-", color=C(sid), ms=5, lw=1.4)
+            ax.annotate(
+                fmt.format(vals[-1]),
+                (es[-1], vals[-1]),
+                xytext=(5, -3),
+                textcoords="offset points",
+                fontsize=8,
+            )
+    axes[0].axhline(np.log(2), color=P["muted"], lw=1, ls="--")
+    axes[0].text(
+        0.99,
+        np.log(2) + 0.012,
+        "ln 2 = no preference",
+        color=P["muted"],
+        fontsize=8,
+        ha="right",
+        transform=axes[0].get_yaxis_transform(),
+    )
+    axes[1].axhline(0.5, color=P["muted"], lw=1, ls="--")
+    axes[1].text(
+        0.99,
+        0.505,
+        "chance",
+        color=P["muted"],
+        fontsize=8,
+        ha="right",
+        transform=axes[1].get_yaxis_transform(),
+    )
+    axes[0].set_title("(a) DPO loss, train")
+    axes[1].set_title("(b) held-out preference accuracy")
+    axes[2].set_title("(c) held-out reward margin")
+    for ax in axes:
+        ax.set_xlabel("optimizer step (effective batch 16)")
+    _pct_axis(axes[1], "y")
+    fig.legend(*axes[0].get_legend_handles_labels(), loc="lower center", ncol=2, bbox_to_anchor=(0.5, -0.08))
+    fig.tight_layout()
+    return fig
+
 
 def dpo_rewards() -> Any:
     fig, axes = plt.subplots(2, 3, figsize=(11, 5.4), sharex="row")
@@ -411,7 +512,9 @@ def dpo_rewards() -> Any:
     fig.tight_layout()
     return fig
 
+
 # =========================================================================== automatic metrics
+
 ROWS = [
     ("test", "length_ok", "Requested length ↑"),
     ("test", "markdown", "Markdown artifacts ↓"),
@@ -422,6 +525,7 @@ ROWS = [
     ("policy", "fantasy_rate_offgenre", "Off-genre → fantasy ↑"),
     ("policy", "fantasy_rate_adversarial", "Adversarial → fantasy ↑"),
 ]
+
 
 def _metric_panel(ax: Any, res: dict, systems: list[str], title: str) -> None:
     off = np.linspace(-0.3, 0.3, len(systems))
@@ -442,6 +546,7 @@ def _metric_panel(ax: Any, res: dict, systems: list[str], title: str) -> None:
     for i in range(len(ROWS) - 1):
         ax.axhline(i + 0.5, color=P["grid"], lw=0.7)
 
+
 def eval_metrics() -> Any:
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.9), sharey=True, gridspec_kw={"width_ratios": [1.25, 1]})
     _metric_panel(
@@ -459,6 +564,45 @@ def eval_metrics() -> Any:
     fig.tight_layout()
     return fig
 
+
+def eval_lengths() -> Any:
+    fig, axes = plt.subplots(2, 3, figsize=(12, 5.4))
+    for row, (lang, systems, unit) in enumerate(
+        (
+            ("ja", ["base", "teacher", "kitsune-sft"], "characters"),
+            ("en", ["base-en", "kitsune-en-sft", "kitsune-en"], "words"),
+        )
+    ):
+        gens = {s: _generations(lang, s) for s in systems}
+        for col, fmt in enumerate(("あらすじ", "短編", "続き")):
+            ax = axes[row, col]
+            lo, hi = _band(fmt, lang)
+            ax.axvspan(lo, hi, color=P["sys"]["kitsune-sft"], alpha=0.1, lw=0)
+            data = {s: [_length(r["text"], lang) for r in gens[s] if r["format"] == fmt] for s in systems}
+            top = np.percentile(np.concatenate(list(data.values())), 99)
+            bins = np.linspace(0, top, 42)
+            for s, d in data.items():
+                inside = np.mean([(lo <= v <= hi) for v in d])
+                ax.hist(
+                    d,
+                    bins=bins,
+                    histtype="step",
+                    lw=1.8,
+                    color=C(s),
+                    label=f"{SHORT[s]}: {inside:.0%} in range",
+                    density=True,
+                )
+            ax.set_yticks([])
+            _no_ygrid(ax)
+            ax.set_title(
+                f"{'JP' if lang == 'ja' else 'EN'} {FMT_EN[fmt]}, target {lo:,}–{hi:,} {unit}", fontsize=9
+            )
+            ax.set_xlabel(unit)
+            ax.legend(loc="upper right", fontsize=7.2)
+    fig.tight_layout()
+    return fig
+
+
 def _length_grid(lang: str, system: str) -> tuple[list[str], np.ndarray]:
     cells: dict[tuple[str, str], list[float]] = defaultdict(list)
     for r in _generations(lang, system):
@@ -471,8 +615,8 @@ def _length_grid(lang: str, system: str) -> tuple[list[str], np.ndarray]:
     grid = np.array([[np.mean(cells[(g, f)]) if cells[(g, f)] else np.nan for f in FMT_EN] for g in genres])
     return genres, grid
 
+
 def eval_length_grid() -> Any:
-    print("[debug] eval_length_grid", flush=True)
     from kitsune.en import GENRE_NAME_EN
 
     cmap = LinearSegmentedColormap.from_list("k", P["heat"])
@@ -508,8 +652,8 @@ def eval_length_grid() -> Any:
     fig.tight_layout()
     return fig
 
+
 def eval_diversity() -> Any:
-    print("[debug] eval_diversity", flush=True)
     fig, axes = plt.subplots(2, 2, figsize=(11, 5.4), gridspec_kw={"width_ratios": [1.6, 1]})
     for row, (lang, systems, unit) in enumerate(
         (("ja", SYSTEMS_JA, "character"), ("en", SYSTEMS_EN, "word"))
@@ -548,6 +692,9 @@ def eval_diversity() -> Any:
     fig.tight_layout()
     return fig
 
+
+# =========================================================================== judge
+
 JUDGE_ROWS = {
     "ja": [
         ("kitsune-sft_vs_base", "released vs base, full outputs"),
@@ -563,6 +710,54 @@ JUDGE_ROWS = {
         ("kitsune-en_vs_kitsune-en-sft", "released (SFT + DPO) vs SFT"),
     ],
 }
+
+
+def _judge(lang: str) -> list[tuple[dict, str]]:
+    res = _results(lang)["judge"]
+    return [(res[f"judge:{k}"], name) for k, name in JUDGE_ROWS[lang] if f"judge:{k}" in res]
+
+
+def judge_preference() -> Any:
+    fig, axes = plt.subplots(2, 1, figsize=(8, 5.2), sharex=True, gridspec_kw={"height_ratios": [6, 3]})
+    for ax, lang in zip(axes, ("ja", "en"), strict=True):
+        rows = _judge(lang)
+        for i, (v, name) in enumerate(rows):
+            c = v["net_preference"]
+            lm = "equal-length" in name
+            col = P["sys"]["kitsune-sft"] if lm else P["ink2"]
+            ax.errorbar(
+                c["mean"],
+                i,
+                xerr=[[c["mean"] - c["low"]], [c["high"] - c["mean"]]],
+                fmt="D" if lm else "o",
+                color=col,
+                ms=6,
+                elinewidth=1.6,
+                capsize=0,
+            )
+            ax.annotate(
+                f"{c['mean']:+.2f}  [{c['low']:+.2f}, {c['high']:+.2f}]   n = {v['n_pairs']}",
+                (c["high"], i),
+                xytext=(6, -3),
+                textcoords="offset points",
+                fontsize=8,
+                color=P["ink2"],
+            )
+        ax.set_yticks(range(len(rows)), [r[1] for r in rows])
+        ax.set_ylim(len(rows) - 0.5, -0.5)
+        ax.axvline(0, color=P["ink"], lw=0.9)
+        ax.set_xlim(-1, 1)
+        _no_ygrid(ax)
+        val = _results(lang)["judge"]["judge:validation"]["accuracy_all"]["mean"]
+        ax.set_title(
+            f"{'Japanese' if lang == 'ja' else 'English'} (judge accuracy on known-answer pairs: {val:.1%})"
+        )
+    axes[1].set_xlabel(
+        "← prefers the second system      net preference = P(win) − P(loss)      prefers the first system →"
+    )
+    fig.tight_layout()
+    return fig
+
 
 def judge_outcomes() -> Any:
     rows = [(f"JP  {n}", v) for v, n in _judge("ja")] + [(f"EN  {n}", v) for v, n in _judge("en")]
@@ -604,7 +799,79 @@ def judge_outcomes() -> Any:
     fig.tight_layout()
     return fig
 
+
+CORRUPT = {
+    "chinese": "Chinese mixed in (JP)",
+    "script_leak": "other script mixed in (EN)",
+    "loop": "paragraph loop",
+    "shuffle": "sentences shuffled",
+    "truncate": "cut off mid-story",
+    "wrong_story": "story for another request",
+}
+
+
+def judge_validation() -> Any:
+    fig, ax = plt.subplots(figsize=(8.4, 3))
+    keys = list(CORRUPT)
+    x = np.arange(len(keys) + 1)
+    for k, (lang, col) in enumerate((("ja", "kitsune-sft"), ("en", "kitsune-en-sft"))):
+        v = _results(lang)["judge"]["judge:validation"]
+        by = v["accuracy_by_corruption"]
+        vals = [by.get(c, np.nan) for c in keys] + [v["accuracy_all"]["mean"]]
+        xs = x + (k - 0.5) * 0.36
+        ax.bar(
+            xs,
+            vals,
+            0.34,
+            color=C(col),
+            zorder=3,
+            label=f"{'Japanese' if lang == 'ja' else 'English'} judge prompts (n = {v['n']})",
+        )
+        for xi, vi in zip(xs, vals, strict=True):
+            if not np.isnan(vi):
+                ax.text(xi, vi + 0.02, f"{vi:.0%}", ha="center", fontsize=7.5, color=P["ink2"])
+    ax.axhline(0.5, color=P["muted"], lw=1, ls="--")
+    ax.set_xticks(x, [CORRUPT[c].replace(" (", "\n(") for c in keys] + ["all pairs"], fontsize=7.8)
+    ax.set_ylim(0, 1.12)
+    _pct_axis(ax, "y")
+    ax.set_ylabel("picks the intact story")
+    ax.grid(axis="x", visible=False)
+    ax.legend(loc="lower right", fontsize=8)
+    fig.tight_layout()
+    return fig
+
+
 # =========================================================================== safety, side effects, compute
+
+
+def safety() -> Any:
+    fig, axes = plt.subplots(1, 2, figsize=(11, 3.3))
+    for ax, lang, systems, title in (
+        (axes[0], "ja", SYSTEMS_JA, "Japanese, 45 disallowed prompts × 3 seeds"),
+        (axes[1], "en", SYSTEMS_EN, "English, 45 × 3"),
+    ):
+        res = _results(lang)
+        for i, s in enumerate(systems):
+            p = res["systems"][s]["policy"]
+            ref, vio = p["refusal_rate_disallowed"]["mean"], p["violation_rate_disallowed"]["mean"]
+            red = max(0.0, 1 - ref - vio)
+            ax.barh(i, ref, color=P["good"], height=0.62, zorder=3)
+            ax.barh(i, red, left=ref, color=P["neutral"], height=0.62, zorder=3)
+            ax.barh(i, vio, left=ref + red, color=P["bad"], height=0.62, zorder=3)
+            ax.text(1.01, i, f"{vio:.0%} violations", va="center", fontsize=8, color=P["ink2"])
+        ax.set_yticks(range(len(systems)), [SHORT[s] for s in systems], fontsize=8)
+        ax.set_ylim(5.5, -0.5)
+        ax.set_xlim(0, 1)
+        _pct_axis(ax)
+        ax.set_title(title)
+        _no_ygrid(ax)
+    fig.legend(
+        handles=[Patch(color=P["good"], label="refused"), Patch(color=P["neutral"], label="safe fantasy redirect"), Patch(color=P["bad"], label="violation: uses the real person / IP, or unsafe")],
+        loc="lower center", ncol=3, bbox_to_anchor=(0.5, -0.09),
+    )  # fmt: skip
+    fig.tight_layout()
+    return fig
+
 
 def lmeval() -> Any:
     lm = _load(R / "lm_eval_summary.json")
@@ -639,3 +906,99 @@ def lmeval() -> Any:
     ax.legend(loc="upper left", fontsize=8, ncol=2, bbox_to_anchor=(0, 1.13))
     fig.tight_layout()
     return fig
+
+
+def ppl_leakage() -> Any:
+    site = _load(Path("reports/site/kitsune.json"))["eval"]
+    fig, axes = plt.subplots(1, 2, figsize=(10.5, 3.1))
+    groups = (("ja", ["base", "kitsune-sft", "kitsune"]), ("en", ["base-en", "kitsune-en-sft", "kitsune-en"]))
+    ax = axes[0]
+    xpos = 0.0
+    ticks, labels = [], []
+    for lang, systems in groups:
+        for s in systems:
+            v = site[lang]["ppl"][s]["ppl"]
+            ax.bar(xpos, v, 0.7, color=C(s), zorder=3)
+            ax.text(xpos, v + 0.12, f"{v:.2f}", ha="center", fontsize=8, color=P["ink2"])
+            ticks.append(xpos)
+            labels.append(SHORT[s].replace(" (", "\n("))
+            xpos += 1
+        xpos += 0.6
+    ax.set_xticks(ticks, labels, fontsize=7.2)
+    ax.set_ylabel("perplexity on the validation split")
+    ax.set_title(
+        f"(a) validation perplexity (JP {site['ja']['ppl']['base']['n_tokens']:,} tokens, EN {site['en']['ppl']['base-en']['n_tokens']:,})"
+    )
+    ax.grid(axis="x", visible=False)
+    ax = axes[1]
+    xpos = 0.0
+    ticks, labels = [], []
+    for lang, systems in groups:
+        for s in systems:
+            lk = site[lang]["leakage"].get(s)
+            if not lk:
+                continue
+            ax.bar(xpos, lk["overlap_rate_mean"], 0.7, color=C(s), zorder=3)
+            ax.text(
+                xpos,
+                lk["overlap_rate_mean"] + 0.0006,
+                f"{lk['overlap_rate_mean']:.1%}\nmax {lk['max_span_max']:.0f}",
+                ha="center",
+                fontsize=7.4,
+                color=P["ink2"],
+            )
+            ticks.append(xpos)
+            labels.append(SHORT[s].replace(" (", "\n("))
+            xpos += 1
+        xpos += 0.6
+    ax.set_xticks(ticks, labels, fontsize=7.2)
+    ax.yaxis.set_major_formatter(PercentFormatter(1.0, decimals=1))
+    ax.set_ylim(0, 0.024)
+    ax.set_ylabel("32-char windows found in training data")
+    ax.set_title("(b) verbatim overlap with training stories (max = longest span, chars)")
+    ax.grid(axis="x", visible=False)
+    fig.tight_layout()
+    return fig
+
+
+def compute() -> Any:
+    site = _load(Path("reports/site/kitsune.json"))["budget"]
+    ph = sorted(site["phases"], key=lambda p: p["usd"])
+    fig, ax = plt.subplots(figsize=(6.8, 3))
+    ax.barh(
+        [p["phase"] for p in ph], [p["usd"] for p in ph], color=P["sys"]["kitsune-sft"], height=0.62, zorder=3
+    )
+    total = sum(p["usd"] for p in ph)
+    for i, p in enumerate(ph):
+        ax.text(
+            p["usd"] + 0.12,
+            i,
+            f"${p['usd']:.2f}  ({p['usd'] / total:.0%})",
+            va="center",
+            fontsize=8.2,
+            color=P["ink2"],
+        )
+    ax.set_xlabel(f"USD, per-job ledger (sum ${total:.2f}; Modal billed ${site['total_billed']:.2f})")
+    ax.set_xlim(0, max(p["usd"] for p in ph) * 1.35)
+    _no_ygrid(ax)
+    fig.tight_layout()
+    return fig
+
+
+FIGURES = [
+    data_funnel, data_rejections, sft_loss, sft_dynamics, sft_runs, ablations, dpo_training, dpo_rewards,
+    eval_metrics, eval_lengths, eval_length_grid, eval_diversity, judge_preference, judge_outcomes, judge_validation,
+    safety, lmeval, ppl_leakage, compute,
+]  # fmt: skip
+
+
+def main() -> None:
+    for theme in ("light", "dark"):
+        _style(theme)
+        for f in FIGURES:
+            _save(f(), f.__name__, theme)
+    print(f"wrote {len(FIGURES)} figures × 2 themes to {OUT}")
+
+
+if __name__ == "__main__":
+    main()

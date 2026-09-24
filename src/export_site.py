@@ -1,31 +1,40 @@
 """Export every number the project website shows into one JSON file (``reports/site/kitsune.json``).
+
 The website lives in its own repository (kitsune-tales-qwen-site); ``--site <path>`` copies this file and the
 figures into a local checkout of it, so the statistics are only ever produced here.
 
     python -m kitsune.export_site
+
 The site renders only what this file contains, and this file is built only from ``reports/``, ``configs/`` and
 Modal's billed totals, so every figure on the site traces to the same evaluation outputs as REPORT.md.
 """
+
 from __future__ import annotations
+
 import json
 import re
 from pathlib import Path
 from typing import Any
+
 import yaml
 from kitsune import cost, en, versions
 from kitsune.eval.report import SYSTEM_NOTES
 from kitsune.taxonomy import FORMATS, GENRE_EN, GENRES
+
 R = Path("reports")
 OUT = Path("reports/site/kitsune.json")
 SITE_URL = "https://kitsune-tales-qwen.vercel.app"
 
+
 def _load(p: Path) -> Any:
     return json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
+
 
 def _ci(d: dict | None) -> dict | None:
     if not d:
         return None
     return {"mean": d["mean"], "low": d["low"], "high": d["high"], "n": d.get("n")}
+
 
 def _systems(res: dict, order: list[str]) -> list[dict]:
     out = []
@@ -44,6 +53,7 @@ def _systems(res: dict, order: list[str]) -> list[dict]:
             }
         )
     return out
+
 
 def _judge(res: dict) -> dict:
     j = res.get("judge", {})
@@ -76,6 +86,7 @@ def _judge(res: dict) -> dict:
         if val
         else None,
     }
+
 
 def _train() -> dict:
     t = {p.stem: _load(p) for p in sorted((R / "train").glob("*.json"))}
@@ -126,6 +137,7 @@ def _train() -> dict:
         },
     }  # fmt: skip
 
+
 def _data(p: Path) -> dict | None:
     d = _load(p)
     if not d:
@@ -144,6 +156,7 @@ def _data(p: Path) -> dict | None:
         "dedup": d.get("dedup", {}),
     }
 
+
 def _gguf() -> dict:
     out = {}
     for lang, merged in (("jp", "sft-main"), ("en", "dpo-en-main")):
@@ -158,6 +171,7 @@ def _gguf() -> dict:
             "llama_cpp_commit": (g or {}).get("llama_cpp_commit"),
         }  # fmt: skip
     return out
+
 
 def _budget() -> dict:
     rows = [
@@ -186,8 +200,8 @@ def _budget() -> dict:
         "phases": [{"phase": k, "usd": round(v, 2)} for k, v in phase.items()],
     }
 
+
 def _samples() -> dict:
-    print("[debug] _samples", flush=True)
     tr = _load(R / "translations_jp.json") or {}
     jp = _load(R / "samples_gallery_jp.json") or []
     enx = _load(R / "samples_gallery_en.json") or []
@@ -204,6 +218,7 @@ def _samples() -> dict:
         "jp": [{**{k: r.get(k) for k in ("prompt_id", "genres", "title", "format", "passage", "text")}, "translation_en": tr.get(r["prompt_id"], "")} for r in pick(jp, 4)],
         "en": [{k: r.get(k) for k in ("prompt_id", "genres", "title", "format", "passage", "text")} for r in pick(enx, 4)],
     }  # fmt: skip
+
 
 TRAIN_KEYS = (
     "loss",
@@ -226,6 +241,7 @@ EVAL_KEYS = (
     "eval_rewards/margins",
 )
 
+
 def _curves() -> dict:
     """Trainer logs of every run (reports/train_logs/*.json, copied from each run's trainer_state.json)."""
     out = {}
@@ -243,6 +259,29 @@ def _curves() -> dict:
         out[f.stem] = {"train": cols(tr, TRAIN_KEYS), "eval": cols(ev, EVAL_KEYS)}
     return out
 
+
+GITHUB_REPO = "https://github.com/whoashish115/kitsune-tales-qwen"
+HF_COLLECTION = "https://huggingface.co/collections/whoashish115/kitsune-tales-6abd4e61de4896bb86692bc1"
+
+
+def _links() -> dict:
+    hf = "https://huggingface.co"
+    return {
+        "site": SITE_URL,
+        "site_repo": "https://github.com/whoashish115/kitsune-tales-qwen-site",
+        "github": GITHUB_REPO,
+        "wandb": f"https://wandb.ai/whoashish115-base/{versions.WANDB_PROJECT}",
+        "collection": HF_COLLECTION,
+        "space": f"{hf}/spaces/{versions.HF_SPACE_REPO}",
+        "author": {"name": "Ashish Kumar", "github": "https://github.com/whoashish115", "hf": f"{hf}/whoashish115"},
+        "models": {
+            "jp": {"merged": f"{hf}/{versions.HF_MODEL_REPO}", "lora": f"{hf}/{versions.HF_ADAPTER_REPO}", "gguf": f"{hf}/{versions.HF_GGUF_REPO}"},
+            "en": {"merged": f"{hf}/{versions.HF_MODEL_REPO_EN}", "lora": f"{hf}/{versions.HF_ADAPTER_REPO_EN}", "gguf": f"{hf}/{versions.HF_GGUF_REPO_EN}"},
+        },
+        "datasets": {"jp": f"{hf}/datasets/{versions.HF_DATASET_REPO}", "en": f"{hf}/datasets/{versions.HF_DATASET_REPO_EN}"},
+    }  # fmt: skip
+
+
 def sync_site(site: Path) -> None:
     """Copy the exported numbers and the figures into a checkout of the website repository."""
     import shutil
@@ -257,3 +296,85 @@ def sync_site(site: Path) -> None:
     for f in (R / "figures" / "dark").glob("*.svg"):
         shutil.copy(f, figs / "dark" / f.name)
     print(f"synced data and figures into {site}")
+
+
+def main() -> None:
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--site", type=Path, help="local checkout of kitsune-tales-qwen-site to sync into")
+    args = ap.parse_args()
+    ja = _load(R / "results.json")
+    enr = _load(R / "results_en.json")
+    rel = yaml.safe_load(Path("configs/release.yaml").read_text(encoding="utf-8"))
+    ecfg = yaml.safe_load(Path("configs/eval.yaml").read_text(encoding="utf-8"))
+    data = {
+        "project": {
+            "name": "Kitsune Tales",
+            "base_model": versions.BASE_MODEL,
+            "base_revision": versions.BASE_REVISION,
+            "params": {"stored_b": 7.52, "effective_b": 4.62},
+            "generators": [versions.GENERATOR_MODEL, versions.GENERATOR2_MODEL],
+            "judge": versions.JUDGE_MODEL,
+            "wandb": f"https://wandb.ai/whoashish115-base/{versions.WANDB_PROJECT}",
+            "links": _links(),
+            "models": [
+                {
+                    "slug": versions.MODEL_SLUG,
+                    "lang": "ja",
+                    "release_system": rel["ja"]["system"],
+                    "recipe": "SFT",
+                },
+                {
+                    "slug": versions.MODEL_SLUG_EN,
+                    "lang": "en",
+                    "release_system": rel["en"]["system"],
+                    "recipe": "SFT + DPO",
+                },
+            ],
+            "genres": [{"ja": g, "en": GENRE_EN[g], "en_prompt": en.GENRE_NAME_EN[g]} for g in GENRES],
+            "formats": [
+                {
+                    "ja": k,
+                    "en": en.FORMAT_NAME_EN[k],
+                    "ja_chars": [f.target_min, f.target_max],
+                    "en_words": [en.FORMATS_EN[k].target_min, en.FORMATS_EN[k].target_max],
+                }
+                for k, f in FORMATS.items()
+            ],
+            "decoding": ecfg["decoding"],
+            "seeds": ecfg["seeds"],
+        },
+        "data": {"ja": _data(R / "data" / "stats.json"), "en": _data(R / "data_en" / "stats.json")},
+        "training": _train(),
+        "curves": _curves(),
+        "eval": {
+            "ja": {
+                "systems": _systems(
+                    ja, ["base", "kitsune-sft", "kitsune", "qwen3.5-4b", "qwen3.5-9b", "teacher"]
+                ),
+                "judge": _judge(ja),
+                "ppl": ja.get("ppl"),
+                "lm_eval": ja.get("lm_eval_summary"),
+                "leakage": ja.get("leakage"),
+            },
+            "en": {
+                "systems": _systems(enr, ["base-en", "kitsune-en-sft", "kitsune-en"]),
+                "judge": _judge(enr),
+                "ppl": _load(R / "ppl_en.json"),
+                "leakage": _load(R / "leakage_en.json"),
+            },
+        },
+        "gguf": _gguf(),
+        "budget": _budget(),
+        "samples": _samples(),
+    }
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    OUT.write_text(json.dumps(data, ensure_ascii=False, indent=1, default=float), encoding="utf-8")
+    print(f"wrote {OUT} ({OUT.stat().st_size / 1024:.0f} KB)")
+    if args.site:
+        sync_site(args.site)
+
+
+if __name__ == "__main__":
+    main()
