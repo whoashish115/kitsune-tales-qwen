@@ -12,4 +12,4 @@
 - [x] judge + lm-eval results
 - [x] paper figures
 - [x] hub release + space
-- [ ] colab notebook
+- [x] colab notebook
