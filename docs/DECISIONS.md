@@ -5,7 +5,9 @@ because code comments and configs cite them; entries that only concerned infrast
 
 ---
 
-## D-001 / D-001a: Base model: Gemma 4 E4B
+## D-001: Base model
+
+*Also D-001a (bake-off result).* Gemma 4 E4B.
 
 Requirements: a license that allows redistributing derivatives, strong Japanese, 3B to 9B parameters, a usable chat
 template, and a quantized build that runs on a CPU.
@@ -37,13 +39,15 @@ tables that cost almost no compute) and computes like a 4.62B model, hence "E4B"
 `kitsune-tales-e4b-jp` / `kitsune-tales-e4b-en`. Thinking is off by default; `<turn|>` ends a turn; tokenization gives
 1.43 Japanese characters per token.
 
-## D-002: bf16 LoRA, not QLoRA
+## D-002: LoRA precision
 
 A bf16 LoRA fits easily on one H100, so 4-bit QLoRA would add quantization error for no saving. LoRA targets every
 linear layer of the language model (attention, MLP and the per-layer-embedding projections); the vision and audio
 towers are frozen. r = 32, α = 64, dropout 0.05: 77.8M trainable parameters (0.97 % of the checkpoint).
 
-## D-003 / D-006: Data sources and generators
+## D-003: Data sources
+
+*Also D-006.*
 
 - **No web fiction.** Japanese web-novel corpora have unclear provenance or restrictive terms (Syosetu text belongs to
   its authors). Every training story is synthetic.
@@ -59,7 +63,7 @@ the base model, which limits self-preference, and it reads both Japanese and Eng
 presentation orders; a win counts only when both orders agree. Judge results are reported only together with the
 known-answer validation (D-010).
 
-## D-007: Task format and data plan
+## D-007: Task format
 
 A fixed system prompt (general audience, original, fantasy only) and a user turn with genres (from a 9-genre
 taxonomy), title and format; continuations add the passage to continue.
@@ -84,7 +88,9 @@ real-person and IP blocklist; title and genre-tag consistency; cross-model LLM l
 from their own seeds and SHA-256-frozen before any training data existed. Training titles within near-duplicate distance
 of a test title are excluded. Validation is 3 % of kept examples, stratified by genre × format.
 
-## D-008 / D-010: Evaluation design
+## D-008: Evaluation design
+
+*Also D-010.*
 
 - **Systems:** base model, SFT, SFT + DPO; for Japanese also Qwen3.5-4B, Qwen3.5-9B and the 35B teacher as references.
 - **Decoding:** temperature 0.8, top-p 0.95, top-k 50, repetition penalty 1.05, three seeds, vLLM.
@@ -97,7 +103,7 @@ of a test title are excluded. Validation is 3 % of kept examples, stratified by 
 - **General ability:** four JGLUE tasks through lm-eval (ja_leaderboard, 500 items each), base vs released.
 - **Samples:** seed-0 outputs chosen by a seeded random draw stratified by genre × format, never for quality.
 
-## D-011: Cross-model labels; DPO labeler differs from the evaluation judge
+## D-011: Cross-model labels
 
 - Each generator labels the other generator's stories. All kept stories carry a cross-label (`label_sources` in the
   data statistics).
@@ -105,27 +111,31 @@ of a test title are excluded. Validation is 3 % of kept examples, stratified by 
   cannot optimize directly for the judge's taste.
 - Model selection (bake-off, ablations) never touches test prompts.
 
-## D-012: No sequence packing
+## D-012: No packing
 
 Packing two sequences into one row with reset `position_ids` changes the logits of the second sequence by up to 14.5
 (repeat-pass noise 0.0) for Gemma 4 E4B, because attention is not masked by position ids in this stack. Packing would
 leak context across examples, so training uses `packing: false` with length-grouped batches.
 
-## D-014 / D-025 / D-028: Compute limits and the budget guard
+## D-014: Budget guard
+
+*Also D-025 and D-028.*
 
 Two Modal accounts with fixed credit. Before every launch, `kitsune.cost.guard` compares the account's hard stop
 against max(Modal's billed total, ledger including running jobs' estimates) + 1.25 × the new job's estimate, and
 refuses to launch past it. Billing was measured at 0.96–1.12 × the ledger, so recorded spend counts at face value.
 Summary in [BUDGET.md](BUDGET.md).
 
-## D-016: Stack checks before spending
+## D-016: Stack checks
 
 - Merges are done in fp32 and rounded once to bf16; the check reports teacher-forced top-1 agreement and mean KL
   against the unmerged adapter (98.2–99.0 % and about 0.0012 for the released models).
 - vLLM 0.30 serves Gemma 4 text-only and with LoRA; FlashInfer's sampler is disabled (`VLLM_USE_FLASHINFER_SAMPLER=0`)
   so the slim image needs no CUDA compiler.
 
-## D-017 to D-020: Data findings from the probe and inspection
+## D-017: Data findings
+
+*D-017 to D-020.*
 
 - Qwen3.6's simplified-Chinese contamination rises with temperature (0.7: 5 %, 0.8: 22 %, 1.0: 60 %), so generation
   runs at ≤ 0.75 with an explicit instruction against simplified Chinese.
@@ -136,19 +146,23 @@ Summary in [BUDGET.md](BUDGET.md).
   positives (a blocklisted name matching inside longer names, and a meta-text pattern matching ordinary prose).
 - Final Japanese data: 10,257 kept of 15,320 generations, 10,090 train / 302 validation.
 
-## D-021 / D-022: Training schedule and hardware
+## D-021: Training schedule
+
+*Also D-022.*
 
 One epoch at batch 16 (lr 2e-4, cosine, warm-up 3 %). The pilot (5 % of data) measured 2,569 tokens/s and 22.4 GiB peak
 on an H100. Per training example the H100 is about 4× faster than an L40S at 1.7× the hourly price, so every SFT run
 uses an H100. Ablations share the data, seed and hyperparameters of the main run except the ablated factor.
 
-## D-023: Training safeguards and translations
+## D-023: Safeguards
 
 Every run writes a fingerprint (training and validation SHA-256 plus config) and refuses to resume from checkpoints
 with a different fingerprint. Japanese samples shown in the README, report, site and playground carry English
 translations that keep the model's mistakes.
 
-## D-024 / D-026: English model with the same protocol
+## D-024: English model
+
+*Also D-026.*
 
 `kitsune-tales-e4b-en` writes English fantasy with Japanese anime and light-novel themes. It shares the taxonomy,
 schema, filter design, training recipe (only data and system prompt differ), DPO recipe and evaluation protocol with
@@ -164,7 +178,7 @@ sample fails a hard rule, the other passes) or if the teacher prefers the same s
 Teacher verdicts use one sentence per criterion and up to 2,048 output tokens, so every call ends in a verdict
 (3,797 of 3,798 valid). β = 0.1, lr 2e-5, one epoch, the SFT adapter as the frozen reference.
 
-## D-029: Refusal pairs and the release rule
+## D-029: Release rule
 
 Quality-only DPO (Japanese v2) moved disallowed requests toward stories: the violation rate on the 45 held-out
 disallowed prompts × 3 seeds went from 5.2 % (SFT) to 20.7 %. English DPO therefore adds 135 refusal pairs: for each

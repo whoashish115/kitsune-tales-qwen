@@ -331,7 +331,7 @@ and `docs/DATA_CARD.md`.
 ## Limitations
 {LIMITATIONS}
 
-## Ethics of synthetic-data training
+## Synthetic-data ethics
 Using larger models' outputs concentrates their stylistic and cultural biases and can launder their mistakes into a
 new model. We used only generators whose licenses allow it, recorded every sample's generator and revision, used a
 judge from a different model family for evaluation, and publish the pipeline so the data can be audited.

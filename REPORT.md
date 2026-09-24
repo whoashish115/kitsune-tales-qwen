@@ -33,7 +33,7 @@ individual can afford, while measuring the result honestly.
 
 ## 2. Related work
 
-Only sources we opened are cited (see `docs/related_work.md`).
+Only sources we opened are cited (see `docs/LITERATURE.md`).
 LoRA [Hu et al. 2021] freezes the base and learns low-rank updates that merge without inference latency; QLoRA
 [Dettmers et al. 2023] adds 4-bit base weights, which we do not use because the Qwen3.5 guidance advises against it.
 LoRA preserves out-of-domain ability better than full fine-tuning [Biderman et al. 2024], which motivates our

@@ -296,7 +296,7 @@ One JSON object per line: `prompt` (the user request: genres, title, format, and
 `response` (the story), `genres`, `title`, `format`, `language`, `generator` (model and revision), `filters_passed`,
 `source` (`synthetic` or `policy`), `hash`, `id` and `meta` (generation settings).
 
-## How it was built
+## Construction
 
 1. Requests are sampled from a fixed taxonomy of nine genres and three formats; titles come from templates or are
    brainstormed by the generators. Titles close to any held-out test title are removed.
@@ -312,7 +312,7 @@ One JSON object per line: `prompt` (the user request: genres, title, format, and
 
 ![Rejection reasons](figures/data_rejections.png)
 
-## Intended use and limits
+## Intended use
 
 For research on small-model specialisation and for fine-tuning story models. The stories are machine-written and carry
 the generators' clichés; the lexicon-based safety filters miss paraphrases. Held-out test prompts are not included:

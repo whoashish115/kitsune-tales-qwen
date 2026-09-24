@@ -1,4 +1,4 @@
-# Data card: Kitsune synthetic Japanese fantasy fiction
+# Data card
 
 > Counts, hashes and filter statistics come from `reports/data/stats.json` and `reports/data_en/stats.json`; nothing here is estimated by hand.
 
@@ -40,7 +40,9 @@ LLM labels, and for 続き the passage length.
 - `続き` pairs come from separate "source" stories, cut at sentence boundaries: a 200–400-character passage, then
   400–800 characters of continuation.
 
-## Filtering (in order; every drop keeps its first failing reason)
+## Filtering
+
+Filters run in order; every dropped story keeps its first failing reason.
 
 1. Generation finished (no truncation at the token cap).
 2. No template artifacts (thinking tags, chat tokens, prompt echoes, code fences).
@@ -73,7 +75,7 @@ exists, and the count of each kind is reported.
 
 _Filled from `reports/data/stats.json` and the plots in `reports/data/`: filter funnel, length histograms, genre × format grid._
 
-## Known biases and limitations
+## Limitations
 
 - The style is inherited from two generator models, so the data reflects their habits, clichés and blind spots.
 - The taxonomy and title templates emphasize popular web-novel tropes (isekai, villainess, guild).
@@ -81,7 +83,9 @@ _Filled from `reports/data/stats.json` and the plots in `reports/data/`: filter 
   LLM labels reduce but do not remove this.
 - Manual inspection covers a seeded random sample of 100 records (`reports/data/inspection_sample.md`), not the whole set.
 
-## English dataset (`kitsune-tales-en-fantasy-sft`, D-024)
+## English dataset
+
+`kitsune-tales-en-fantasy-sft` (D-024).
 
 The English model's data comes from the same pipeline, with English-specific prompts, filters and labeler instructions
 (`src/en.py`). The genre taxonomy, schema (`language = "en"`) and split procedure are shared. Every number

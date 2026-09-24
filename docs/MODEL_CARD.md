@@ -168,7 +168,7 @@ and `docs/DATA_CARD.md`.
   the base model does (see the policy rows in Results).
 - **Evaluation limits.** Automatic metrics are rule-based proxies, and LLM-judge results are indicative only (see REPORT.md).
 
-## Ethics of synthetic-data training
+## Synthetic-data ethics
 Using larger models' outputs concentrates their stylistic and cultural biases and can launder their mistakes into a
 new model. We used only generators whose licenses allow it, recorded every sample's generator and revision, used a
 judge from a different model family for evaluation, and publish the pipeline so the data can be audited.

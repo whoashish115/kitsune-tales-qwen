@@ -1,4 +1,4 @@
-# Literature scan (Phase 1)
+# Literature
 
 Only sources that were actually opened are listed. The **Read** column says how deeply:
 `abstract` = abstract/landing page only, `card` = model card or documentation page.
@@ -26,7 +26,7 @@ Only sources that were actually opened are listed. The **Read** column says how 
 | Li et al., *A Diversity-Promoting Objective Function for Neural Conversation Models*, NAACL (2016), arXiv:1510.03055 | abstract | Origin of the distinct-n diversity metrics (definitions are in the paper body, which was not read; we define ours explicitly in `src/eval/metrics.py`). |
 | Zhu et al., *Texygen: A Benchmarking Platform for Text Generation Models*, arXiv:1802.01886 (2018) | abstract | Origin of Self-BLEU (definition not on the abstract page; ours is defined explicitly in code). |
 
-## Models and tooling (cards and docs)
+## Models and tooling
 
 | Source | Read | Takeaway |
 |---|---|---|
