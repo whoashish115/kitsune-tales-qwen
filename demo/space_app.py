@@ -257,24 +257,94 @@ def explore_show(lang: str, pid: str) -> tuple[str, str, str, str, str, str, str
 
 # --------------------------------------------------------------------------------------------- UI
 
-THEME = gr.themes.Soft(
-    primary_hue=gr.themes.Color(
-        c50="#eeedff", c100="#e0deff", c200="#c6c2ff", c300="#a59ffd", c400="#8a7ffa", c500="#5848f8",
-        c600="#4a3aea", c700="#3e2fcf", c800="#3328a7", c900="#2c2684", c950="#1d1760",
-    ),
-    neutral_hue="slate",
+# Palette of the Kitsune site and the earlier playground: violet-grey neutrals, deep indigo selection states, and the
+# logo violet (#5848f8) reserved for the primary action. Light and dark values mirror each other.
+NEUTRAL = gr.themes.Color(
+    c50="#f7f7fa",
+    c100="#f0eff6",
+    c200="#e4e2ec",
+    c300="#c8c5d3",
+    c400="#9a97a6",
+    c500="#77747f",
+    c600="#5a5864",
+    c700="#47464f",
+    c800="#302f37",
+    c900="#1c1b22",
+    c950="#121216",
+)
+PRIMARY = gr.themes.Color(
+    c50="#f1f0ff",
+    c100="#e6e3ff",
+    c200="#cdc8ff",
+    c300="#aaa2fb",
+    c400="#8478f5",
+    c500="#5848f8",
+    c600="#4a3aea",
+    c700="#3e2fcf",
+    c800="#2d2677",
+    c900="#241f5c",
+    c950="#1d1170",
+)
+THEME = gr.themes.Base(
+    primary_hue=PRIMARY,
+    secondary_hue=PRIMARY,
+    neutral_hue=NEUTRAL,
     font=[gr.themes.GoogleFont("Roboto"), gr.themes.GoogleFont("Noto Sans JP"), "system-ui", "sans-serif"],
     font_mono=[gr.themes.GoogleFont("Roboto Mono"), "ui-monospace", "monospace"],
     radius_size="lg",
 ).set(
+    body_background_fill="#f4f4f8",
+    body_background_fill_dark="#121216",
+    background_fill_primary="#ffffff",
+    background_fill_primary_dark="#1c1b22",
+    background_fill_secondary="#f0eff6",
+    background_fill_secondary_dark="#24232b",
+    block_background_fill="#ffffff",
+    block_background_fill_dark="#1c1b22",
+    block_border_color="#e4e2ec",
+    block_border_color_dark="#302f37",
+    border_color_primary="#e4e2ec",
+    border_color_primary_dark="#302f37",
+    input_background_fill="#ffffff",
+    input_background_fill_dark="#1c1b22",
+    input_border_color="#c8c5d3",
+    input_border_color_dark="#48464f",
+    color_accent="#5848f8",
+    color_accent_soft="#e6e3ff",
+    color_accent_soft_dark="#2d2677",
+    checkbox_label_background_fill="transparent",
+    checkbox_label_background_fill_dark="transparent",
+    checkbox_label_background_fill_selected="#e6e3ff",
+    checkbox_label_background_fill_selected_dark="#2d2677",
+    checkbox_label_text_color_selected="#1d1170",
+    checkbox_label_text_color_selected_dark="#e4e0ff",
+    checkbox_background_color_selected="#5848f8",
+    checkbox_background_color_selected_dark="#6a5cff",
     button_primary_background_fill="#5848f8",
+    button_primary_background_fill_dark="#5848f8",
     button_primary_background_fill_hover="#4637e0",
+    button_primary_background_fill_hover_dark="#6a5cff",
     button_primary_text_color="#ffffff",
-)  # fmt: skip
+    button_primary_text_color_dark="#ffffff",
+    button_secondary_background_fill="transparent",
+    button_secondary_background_fill_dark="transparent",
+    button_secondary_background_fill_hover="#f0eff6",
+    button_secondary_background_fill_hover_dark="#24232b",
+    button_secondary_border_color="#c8c5d3",
+    button_secondary_border_color_dark="#48464f",
+    button_secondary_text_color="#4a3aea",
+    button_secondary_text_color_dark="#cdc8ff",
+    slider_color="#5848f8",
+    slider_color_dark="#8478f5",
+    block_label_background_fill="#f0eff6",
+    block_label_background_fill_dark="#24232b",
+)
 
 CSS = """
 .gradio-container{max-width:1280px!important}
 #brand img{border-radius:0}
+#side{background:#ecebf4}
+.dark #side{background:#18171d}
 .story textarea{font-size:15px!important;line-height:1.9!important}
 footer{display:none!important}
 """
@@ -284,7 +354,7 @@ def build() -> gr.Blocks:
     lang0 = "jp"
     with gr.Blocks(title="Kitsune Tales Playground") as demo:
         lang = gr.State(lang0)
-        with gr.Sidebar(open=True, width=300):
+        with gr.Sidebar(open=True, width=300, elem_id="side"):
             gr.Image(
                 str(HERE / "logo.png"),
                 show_label=False,
