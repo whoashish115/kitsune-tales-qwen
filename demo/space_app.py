@@ -309,6 +309,14 @@ THEME = gr.themes.Base(
     input_background_fill_dark="#1c1b22",
     input_border_color="#c8c5d3",
     input_border_color_dark="#48464f",
+    input_border_width="1px",
+    input_border_width_dark="1px",
+    input_border_color_focus="#5848f8",
+    input_border_color_focus_dark="#8478f5",
+    input_shadow_focus="0 0 0 1px #5848f8",
+    input_shadow_focus_dark="0 0 0 1px #8478f5",
+    block_border_width="1px",
+    block_border_width_dark="1px",
     color_accent="#5848f8",
     color_accent_soft="#e6e3ff",
     color_accent_soft_dark="#2d2677",
@@ -346,6 +354,7 @@ CSS = """
 #side{background:#ecebf4}
 .dark #side{background:#18171d}
 .story textarea{font-size:15px!important;line-height:1.9!important}
+.gradio-container .wrap:has(input){border-color:var(--input-border-color)!important}
 footer{display:none!important}
 """
 
@@ -387,7 +396,7 @@ def build() -> gr.Blocks:
                     genres = gr.CheckboxGroup(
                         [(f"{g} {en.GENRE_NAME_EN[g]}", g) for g in GENRES],
                         value=["異世界転生", "冒険者ギルド"],
-                        label="Genres (one to three)",
+                        label="Genres",
                     )
                     title = gr.Textbox(value="追放された剣士は二度目の人生で最強になる", label="Title")
                     fmt = gr.Radio(
@@ -442,6 +451,11 @@ def build() -> gr.Blocks:
                 return x["genres"], x["title"], x["format"], x["passage"]
 
             rnd.click(on_random, lang, [genres, title, fmt, passage])
+
+            def at_most_three(g: list[str]) -> list[str]:
+                return g[:3]  # the models were trained on one to three genres per request
+
+            genres.input(at_most_three, genres, genres)
 
         with gr.Tab("Explore outputs"):
             gr.Markdown(
