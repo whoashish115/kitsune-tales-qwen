@@ -4,9 +4,9 @@
     <!-- BEGIN:results_en -->  reports/results_table_en.md (English)
     <!-- BEGIN:data -->        dataset statistics from reports/data*/stats.json
     <!-- BEGIN:setup -->       training runs and ablations from reports/train/*.json + configs/
-    <!-- BEGIN:budget -->      Modal's billed totals (the ledger gives the per-job breakdown)
+    <!-- BEGIN:budget -->      billed cloud GPU totals (the ledger gives the per-job breakdown)
 
-Only generated content goes between markers, so every number there traces to ``reports/`` or Modal billing.
+Only generated content goes between markers, so every number there traces to ``reports/`` or the provider's billing.
 """
 
 from __future__ import annotations
@@ -44,14 +44,14 @@ def budget_block() -> str:
             billed = cost.spent(cost.read_ledger(), acct)
             src = "ledger (billing unavailable)"
         else:
-            src = "Modal billing"
+            src = "billed"
         total += billed
         lines.append(
             f"- `{acct}`: **${billed:.2f}** of ${cap:.2f} credit ({src}; hard stop ${cost.ACCOUNT_KILL_USD[acct]:.2f})"
         )
     lines.append(f"- **Total: ${total:.2f}**")
     return (
-        "Compute spend as billed by Modal (`modal billing report`); the per-job breakdown with estimates and measured\n"
+        "Cloud GPU spend as billed; the per-job breakdown with estimates and measured\n"
         "wall-clock is in `reports/cost_ledger.jsonl` and `docs/BUDGET.md`.\n\n" + "\n".join(lines)
     )
 

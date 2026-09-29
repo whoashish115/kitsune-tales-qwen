@@ -1,6 +1,6 @@
 """Supervised fine-tuning with bf16 LoRA (TRL SFTTrainer), resumable, with cost/throughput logging.
 
-Runs inside the Modal GPU image (see ``modal_app.train``). Config comes from ``configs/train_*.yaml``.
+Runs inside the cloud GPU image (see ``gpu_jobs.train``). Config comes from ``configs/train_*.yaml``.
 Loss is on the assistant turn only: examples are pre-tokenized by ``kitsune.prompts.tokenize_example``
 with explicit ``labels`` (-100 on prompt tokens), which TRL uses as-is.
 """

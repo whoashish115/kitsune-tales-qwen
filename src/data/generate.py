@@ -2,7 +2,7 @@
 
 CPU side (unit-tested): building generator requests with varied style knobs and sampling
 parameters, parsing brainstormed titles, and splitting stories into 続き pairs.
-GPU side (``run_vllm_chat``): runs inside the Modal GPU image only.
+GPU side (``run_vllm_chat``): runs inside the cloud GPU image only.
 """
 
 from __future__ import annotations

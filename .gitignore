@@ -51,7 +51,7 @@ data/*.parquet
 !data/eval_policy_prompts_en.jsonl
 !data/test_set_en.jsonl
 !data/test_set_en.sha256
-# Bulk data and weights stay out of git: they live on the Modal volume and the Hugging Face Hub
+# Bulk data and weights stay out of git: they live on the cloud volume and the Hugging Face Hub
 data/processed_*/
 data/dpo/
 data/adapters/

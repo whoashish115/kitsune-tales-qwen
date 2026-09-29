@@ -32,14 +32,14 @@ def _gen(i: str, kind: str, fmt: str, text: str, gen: str = "genA", finish: str 
         "kind": kind,
         "text": text,
         "finish_reason": finish,
-        "generator": f"{gen}-model@abc123",  # model@revision, as modal_app.data_run writes it
+        "generator": f"{gen}-model@abc123",  # model@revision, as gpu_jobs.data_run writes it
         "gen_key": gen,
         "meta": {"seed": seed, "knobs": {"pov": "三人称"}},
     }
 
 
 def _lab(sid: str, who: str, text: str) -> dict:
-    """A label row in the format modal_app.data_run writes."""
+    """A label row in the format gpu_jobs.data_run writes."""
     return {
         "id": f"{sid}:label:{who}",
         "text": text,

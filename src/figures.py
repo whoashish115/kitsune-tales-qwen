@@ -978,7 +978,7 @@ def compute() -> Any:
             fontsize=8.2,
             color=P["ink2"],
         )
-    ax.set_xlabel(f"USD, per-job ledger (sum ${total:.2f}; Modal billed ${site['total_billed']:.2f})")
+    ax.set_xlabel(f"USD, per-job ledger (sum ${total:.2f}; billed ${site['total_billed']:.2f})")
     ax.set_xlim(0, max(p["usd"] for p in ph) * 1.35)
     _no_ygrid(ax)
     fig.tight_layout()

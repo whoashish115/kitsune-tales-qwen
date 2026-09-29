@@ -12,7 +12,7 @@ Local mirror (``$KITSUNE_RELEASE``, default ``../kitsune-release``):
     kitsune-tales-qwen-site/        the website repository
 
 Every repo is created private; making it public is a separate, manual step on the Hub. Weights that live on
-the Modal volume (merged models, the English LoRA, GGUF files) are uploaded by ``modal_app.hf_upload``; this module
+the cloud volume (merged models, the English LoRA, GGUF files) are uploaded by ``gpu_jobs.hf_upload``; this module
 uploads the cards next to them, so text and weights can be updated independently.
 """
 
@@ -343,7 +343,7 @@ def local_dir(key: str) -> Path:
 
 
 # Files that exist on this machine and belong in a repo; the merged weights, the English LoRA and the GGUF files
-# live on the Modal volume and are uploaded from there (modal_hub.py).
+# live on the cloud volume and are uploaded from there (hub_upload.py).
 LOCAL_FILES = {
     "jp-lora": (
         "data/adapters/sft-main/adapter",

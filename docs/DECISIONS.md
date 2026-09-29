@@ -121,8 +121,8 @@ leak context across examples, so training uses `packing: false` with length-grou
 
 *Also D-025 and D-028.*
 
-Two Modal accounts with fixed credit. Before every launch, `kitsune.cost.guard` compares the account's hard stop
-against max(Modal's billed total, ledger including running jobs' estimates) + 1.25 × the new job's estimate, and
+Two cloud GPU accounts with fixed credit. Before every launch, `kitsune.cost.guard` compares the account's hard stop
+against max(billed total, ledger including running jobs' estimates) + 1.25 × the new job's estimate, and
 refuses to launch past it. Billing was measured at 0.96–1.12 × the ledger, so recorded spend counts at face value.
 Summary in [BUDGET.md](BUDGET.md).
 

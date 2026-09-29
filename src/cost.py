@@ -1,6 +1,6 @@
 """Compute-cost estimation, the spend ledger, and the budget guard.
 
-Rates are a snapshot of ``modal billing rates`` taken on 2026-09-29 (see docs/BUDGET.md).
+Rates are a snapshot of the provider's list rates taken on 2026-09-29 (see docs/BUDGET.md).
 The ledger is ``reports/cost_ledger.jsonl`` (machine-readable, committed); the table in
 ``docs/BUDGET.md`` is regenerated from it with ``python -m kitsune.cost render``.
 """
@@ -13,7 +13,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 
-RATES_SOURCE = "modal billing rates, 2026-09-29"
+RATES_SOURCE = "provider list rates, 2026-09-29"
 GPU_USD_PER_H: dict[str, float] = {
     "T4": 0.59,
     "L4": 0.80,
@@ -30,7 +30,7 @@ MEM_USD_PER_GIB_H = 0.008
 VOLUME_USD_PER_GIB_MONTH = 0.09
 
 # Per-account credit and hard stops (D-014): spend never exceeds an account's credit, and each stop keeps about $0.40
-# as a buffer for billing lag. The active account is the Modal CLI profile.
+# as a buffer for billing lag. The active account is the GPU client's CLI profile.
 ACCOUNT_CAPS_USD: dict[str, float] = {"kitsune30": 30.00, "kitsune12": 14.28}
 ACCOUNT_KILL_USD: dict[str, float] = {"kitsune30": 29.60, "kitsune12": 13.90}
 HARD_CAP_USD = sum(ACCOUNT_CAPS_USD.values())
@@ -59,7 +59,7 @@ def estimate(gpu: str, hours: float, cpu_cores: float, mem_gib: float, gpu_count
 
 
 def active_account() -> str:
-    """The Modal account a job will bill to: ``MODAL_PROFILE`` if set, else the active CLI profile."""
+    """The cloud account a job will bill to: ``MODAL_PROFILE`` if set, else the active CLI profile."""
     import os
 
     if os.environ.get("MODAL_PROFILE"):
@@ -111,21 +111,21 @@ def spent(entries: list[LedgerEntry], account: str | None = None) -> float:
     )
 
 
-# The local ledger times .remote() calls; Modal also bills container startup, the idle window after a
+# The local ledger times .remote() calls; the provider also bills container startup, the idle window after a
 # job, and image builds (as CPU). Early on 2026-09-29 (many image builds) billing was 1.17-1.3 × ledger (D-014);
-# over the full day ($15, 2026-09-29 21:16 UTC) Modal's live hourly billing was 1.03 × ledger (D-025).
+# over the full day ($15, 2026-09-29 21:16 UTC) live hourly billing was 1.03 × ledger (D-025).
 # Recorded spend is inflated by LEDGER_SAFETY, and a new job's *estimate* by ESTIMATE_SAFETY (estimates are
-# the less certain number). Modal's own billed total is always a floor (see ``guard``).
-# D-028: at face value. Modal's live billed total (floor) and the ledger including running jobs' estimates are
+# the less certain number). The provider's own billed total is always a floor (see ``guard``).
+# D-028: at face value. The live billed total (floor) and the ledger including running jobs' estimates are
 # compared directly; the ledger measured 0.96-1.12 x billing per account, so an extra factor double-counted margin.
 LEDGER_SAFETY = 1.0
 ESTIMATE_SAFETY = 1.25
-LAST_BILLED: float | None = None  # Modal-billed spend seen by the most recent open_job (for the work log)
+LAST_BILLED: float | None = None  # billed spend seen by the most recent open_job (for the work log)
 PROJECT_APP_NAMES = ("kitsune", "kitsune-models", "kitsune-data")
 
 
 def billed_usd(account: str | None = None) -> float | None:
-    """This project's spend on ``account`` according to Modal billing (``modal billing report --csv``).
+    """This project's spend on ``account`` according to the provider's billing report (CSV).
 
     ``--for "this month"`` includes the current partial day (``--start`` reports complete days only); once
     in October, the project's September days (from PROJECT_START) are added. Only rows whose description is
@@ -177,14 +177,14 @@ def guard(
 ) -> float:
     """Raise if spent + this job + the rest of the plan would exceed a hard stop.
 
-    ``spent`` is the larger of the ledger and Modal's own billing (``billed``), so an underestimating
+    ``spent`` is the larger of the ledger and the provider's own billing (``billed``), so an underestimating
     ledger can never let a job through. Checks the account's hard stop (D-014) and the project total.
     Returns the account's projected total. Call before every GPU launch.
     """
     account = account or active_account()
     if account not in ACCOUNT_KILL_USD:
         raise BudgetExceededError(
-            f"unknown Modal account {account!r}; expected one of {sorted(ACCOUNT_KILL_USD)}"
+            f"unknown cloud account {account!r}; expected one of {sorted(ACCOUNT_KILL_USD)}"
         )
     entries = read_ledger(path)
     already = max(spent(entries, account) * LEDGER_SAFETY, billed or 0.0)

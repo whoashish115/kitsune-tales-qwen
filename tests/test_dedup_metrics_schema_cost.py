@@ -171,7 +171,7 @@ def test_ledger_guard_and_close(tmp_path: Path) -> None:
     cost.open_job("5", "big", "H100", 2.0, 8, 64, path=q, account="kitsune30")
     rec = cost.spent(cost.read_ledger(q), "kitsune30")
     assert cost.guard(0.0, path=q, account="kitsune30") == pytest.approx(rec * cost.LEDGER_SAFETY)
-    # Modal's own billing wins when it is higher than the ledger.
+    # The provider's own billing wins when it is higher than the ledger.
     with pytest.raises(cost.BudgetExceededError):
         cost.guard(1.0, path=p, account="kitsune30", billed=29.2)
     assert cost.ACCOUNT_KILL_USD == {"kitsune30": 29.6, "kitsune12": 13.9}

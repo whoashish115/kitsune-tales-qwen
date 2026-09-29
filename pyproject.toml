@@ -13,7 +13,7 @@ classifiers = [
     "Natural Language :: Japanese",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-# Lightweight, CPU-only runtime deps: data pipeline, filters, metrics, report builder, Modal client.
+# Lightweight, CPU-only runtime deps: data pipeline, filters, metrics, report builder, cloud GPU client.
 dependencies = [
     "pydantic==2.13.5",
     "pyyaml==6.0.3",
@@ -29,7 +29,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Everything that runs inside the Modal GPU image. Linux-only; installed there, never on the dev machine.
+# Everything that runs inside the cloud GPU image. Linux-only; installed there, never on the dev machine.
 # Keep in sync with src/versions.py (checked by tests/test_versions.py).
 gpu = [
     "torch==2.13.0; sys_platform == 'linux'",
@@ -85,4 +85,4 @@ python_version = "3.11"
 ignore_missing_imports = true
 warn_unused_ignores = true
 files = ["src"]
-exclude = ["src/modal_app.py", "src/train/", "src/smoke.py"]  # GPU-only code paths
+exclude = ["src/gpu_jobs.py", "src/train/", "src/smoke.py"]  # GPU-only code paths

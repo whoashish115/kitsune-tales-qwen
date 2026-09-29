@@ -4,7 +4,7 @@ Two models, one per language (D-024), chosen by the tab:
     日本語  → kitsune-tales-e4b-jp  (original Japanese fantasy light novels)
     English → kitsune-tales-e4b-en  (English fantasy with Japanese anime / light-novel themes)
 
-Costs $0 in Modal credits: the models run on the Space's own CPU and each loads on first use. Live generation
+Costs nothing to run: the models run on the Space's own CPU and each loads on first use. Live generation
 is slow (a few tokens/s on 2 vCPU), so the gallery tabs always work instantly.
 
 Environment (all optional):

@@ -1,17 +1,21 @@
-# Kitsune — common entry points. GPU targets bill Modal; each prints its estimate and checks the
-# budget guard (src/cost.py) before launching. Set the account with MODAL_PROFILE.
+# Kitsune: common entry points. GPU targets run on rented cloud GPUs; each prints its estimate and checks
+# the budget guard (src/cost.py) before launching. ACCOUNT picks the credentials profile.
 #   make test lint           CPU only, free
-#   make data                 generate + filter + split the dataset (Modal, ~$6-10)
-#   make train                pilot then main SFT (Modal)
+#   make gpu-login           log in to the cloud GPU account (once)
+#   make gpu-secrets         store the W&B and Hugging Face tokens from your environment as job secrets
+#   make gpu JOB="..."       run one GPU job from src/gpu_jobs.py, e.g. make gpu JOB=smoke
+#   make data                 probe, then generate + filter + split the dataset (~$6-10)
+#   make train                pilot then main SFT
 #   make eval                 rebuild every table/figure from committed raw generations (CPU, free)
 #   make demo                 run the Gradio demo locally (CPU, free)
 
 PY      ?= uv run python
-MODAL   ?= uv run modal
-APP     := src/modal_app.py
-PROFILE ?= kitsune30
+CLOUD   ?= uv run modal
+APP     := src/gpu_jobs.py
+ACCOUNT ?= kitsune30
+RUN      = MODAL_PROFILE=$(ACCOUNT) $(CLOUD) run
 
-.PHONY: help install test test-offline lint typecheck fmt data seeds train pilot main dpo merge gen-eval judge eval readme demo budget clean
+.PHONY: help gpu gpu-login gpu-secrets upload install test test-offline lint typecheck fmt data seeds train pilot main dpo merge gen-eval judge eval readme demo budget clean
 
 help:
 	@grep -E '^#' Makefile | sed 's/^# \{0,1\}//'
@@ -39,31 +43,45 @@ fmt:
 seeds:
 	$(PY) -m kitsune.data.cli freeze-test
 
+gpu-login:
+	$(CLOUD) token new --profile $(ACCOUNT)
+
+gpu-secrets:
+	@$(CLOUD) secret create wandb WANDB_API_KEY="$$WANDB_API_KEY" WANDB_ENTITY="$$WANDB_ENTITY" --profile $(ACCOUNT)
+	@$(CLOUD) secret create huggingface HF_TOKEN="$$HF_TOKEN" --profile $(ACCOUNT)
+
+gpu:
+	$(RUN) $(APP)::$(JOB)
+
 data: seeds
-	MODAL_PROFILE=$(PROFILE) $(MODAL) run $(APP)::data_probe
-	MODAL_PROFILE=$(PROFILE) $(MODAL) run $(APP)::data_generate
-	MODAL_PROFILE=$(PROFILE) $(MODAL) run $(APP)::data_pull
-	$(PY) -m kitsune.data.pipeline build
+	$(RUN) $(APP)::data --mode probe --gen gen1 --n-prompts 500
+	$(RUN) $(APP)::data --mode full --gen gen1 --n-prompts 11000 --title-calls 60
+	$(RUN) $(APP)::data --mode full --gen gen2 --n-prompts 5500 --title-calls 30
+	$(RUN) $(APP)::data --mode full --gen gen1 --label-only
+	$(PY) -m kitsune.data.pipeline build --raw data/raw/full
 
 pilot:
-	MODAL_PROFILE=$(PROFILE) $(MODAL) run $(APP)::train --config configs/train_pilot.yaml --name sft-pilot
+	$(RUN) $(APP)::train --config configs/train_pilot.yaml --name sft-pilot
 
 main:
-	MODAL_PROFILE=$(PROFILE) $(MODAL) run $(APP)::train --config configs/train_main.yaml --name sft-main
+	$(RUN) $(APP)::train --config configs/train_main.yaml --name sft-main --est-hours 1.2
 
 train: pilot main
 
 dpo:
-	MODAL_PROFILE=$(PROFILE) $(MODAL) run $(APP)::dpo --name dpo-main
+	$(RUN) $(APP)::dpo --sft-run sft-main --name dpo-main
 
 merge:
-	MODAL_PROFILE=$(PROFILE) $(MODAL) run $(APP)::merge --adapter dpo-main
+	$(RUN) $(APP)::merge --adapter dpo-main
 
 gen-eval:
-	MODAL_PROFILE=$(PROFILE) $(MODAL) run $(APP)::eval_generate
+	$(RUN) $(APP)::eval_generate --systems base,kitsune-sft,kitsune
 
 judge:
-	MODAL_PROFILE=$(PROFILE) $(MODAL) run $(APP)::eval_judge
+	$(RUN) $(APP)::eval_judge
+
+upload:
+	$(RUN) src/hub_upload.py
 
 # Rebuilds reports/results.json, reports/results_table.md and reports/figures/ from raw generations.
 eval:

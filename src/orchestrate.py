@@ -1,11 +1,11 @@
-"""Resumable pipeline runner: each track runs its Modal steps in order and skips the ones already done.
+"""Resumable pipeline runner: each track runs its cloud GPU steps in order and skips the ones already done.
 
-    python -m kitsune.orchestrator --track main   # kitsune30: data, SFT, DPO, evaluation, export
-    python -m kitsune.orchestrator --track k12    # kitsune12: ablations, lm-eval, baselines, judges
-    python -m kitsune.orchestrator --track en     # English model (D-024): data, SFT, DPO, evaluation, judge, GGUF
+    python -m kitsune.orchestrate --track main   # kitsune30: data, SFT, DPO, evaluation, export
+    python -m kitsune.orchestrate --track k12    # kitsune12: ablations, lm-eval, baselines, judges
+    python -m kitsune.orchestrate --track en     # English model (D-024): data, SFT, DPO, evaluation, judge, GGUF
 
 A finished step writes ``reports/orchestrator/<track>/<step>.json`` (local run state, not in git). GPU jobs go
-through the budget guard in ``modal_app.ledger``. A failed step stops its track, so nothing downstream runs on bad
+through the budget guard in ``gpu_jobs.ledger``. A failed step stops its track, so nothing downstream runs on bad
 inputs.
 """
 
@@ -24,15 +24,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 MARKS = ROOT / "reports" / "orchestrator"
-APP = "src/modal_app.py"
+APP = "src/gpu_jobs.py"
 PY = sys.executable
 
 
 @dataclass
 class Step:
     name: str
-    account: str | None = None  # Modal profile for modal steps; None for local steps
-    entry: str | None = None  # modal_app entrypoint
+    account: str | None = None  # cloud profile for GPU steps; None for local steps
+    entry: str | None = None  # gpu_jobs entrypoint
     args: list[str] = field(default_factory=list)
     fn: Callable[[], None] | None = None  # local step
     wait_for: list[str] = field(
@@ -51,7 +51,7 @@ def _done(track: str, name: str) -> Path:
     return MARKS / track / f"{name}.json"
 
 
-def _run_modal(step: Step, track: str) -> None:
+def _run_cloud(step: Step, track: str) -> None:
     ts = datetime.now(UTC).strftime("%Y-%m-%dT%H%MZ")
     log = ROOT / "logs" / "runs" / f"{ts}_{track}_{step.name}.log"
     log.parent.mkdir(parents=True, exist_ok=True)
@@ -64,7 +64,7 @@ def _run_modal(step: Step, track: str) -> None:
             cmd, cwd=ROOT, env=env, stdout=fh, stderr=subprocess.STDOUT, check=False
         ).returncode
     if rc != 0:
-        raise RuntimeError(f"modal step {step.name} exited {rc}; see {log.relative_to(ROOT)}")
+        raise RuntimeError(f"cloud step {step.name} exited {rc}; see {log.relative_to(ROOT)}")
 
 
 # ----------------------------------------------------------------------------- local steps
@@ -161,7 +161,7 @@ def prepare_dpo_v2() -> None:
 
 
 def copy_adapter(run: str, src_profile: str, dst_profile: str) -> None:
-    """Copy runs/<run>/adapter between the two Modal accounts through the local disk (kept as the offline copy)."""
+    """Copy runs/<run>/adapter between the two cloud accounts through the local disk (kept as the offline copy)."""
     local = ROOT / "data" / "adapters" / run
     if not (local / "adapter" / "adapter_model.safetensors").exists():
         local.mkdir(parents=True, exist_ok=True)
@@ -509,7 +509,7 @@ def run(track: str) -> None:
             if s.fn is not None:
                 s.fn()
             else:
-                _run_modal(s, track)
+                _run_cloud(s, track)
         except Exception as e:
             _note(
                 kind="orchestrator",

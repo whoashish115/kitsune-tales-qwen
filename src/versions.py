@@ -1,6 +1,6 @@
 """Single source of truth for pinned versions and model revisions.
 
-The Modal images in ``modal_app.py`` install exactly these versions, and
+The container images in ``gpu_jobs.py`` install exactly these versions, and
 ``tests/test_versions.py`` checks that ``pyproject.toml`` agrees with them.
 Model revisions are full Hugging Face commit hashes, resolved on 2026-09-29.
 """
