@@ -3,10 +3,10 @@
 The website lives in its own repository (kitsune-tales-qwen-site); ``--site <path>`` copies this file and the
 figures into a local checkout of it, so the statistics are only ever produced here.
 
-    python -m kitsune.export_site
+    python -m kitsune.site_export
 
 The site renders only what this file contains, and this file is built only from ``reports/``, ``configs/`` and
-Modal's billed totals, so every figure on the site traces to the same evaluation outputs as REPORT.md.
+the billed cloud GPU totals, so every figure on the site traces to the same evaluation outputs as REPORT.md.
 """
 
 from __future__ import annotations
@@ -282,20 +282,24 @@ def _links() -> dict:
     }  # fmt: skip
 
 
+# The site shows the headline figures only; the full set lives in README.md and REPORT.md.
+SITE_FIGURES = ("data_funnel", "judge_preference", "safety")
+
+
 def sync_site(site: Path) -> None:
-    """Copy the exported numbers and the figures into a checkout of the website repository."""
+    """Copy the exported numbers and the site's figures into a checkout of the website repository."""
     import shutil
 
     (site / "src" / "data").mkdir(parents=True, exist_ok=True)
     shutil.copy(OUT, site / "src" / "data" / "kitsune.json")
     figs = site / "public" / "figures"
-    (figs / "dark").mkdir(parents=True, exist_ok=True)
-    for f in (R / "figures").glob("*.*"):
-        if f.suffix in (".svg", ".png"):
-            shutil.copy(f, figs / f.name)
-    for f in (R / "figures" / "dark").glob("*.svg"):
-        shutil.copy(f, figs / "dark" / f.name)
-    print(f"synced data and figures into {site}")
+    shutil.rmtree(figs, ignore_errors=True)
+    (figs / "dark").mkdir(parents=True)
+    for name in SITE_FIGURES:
+        for ext in (".svg", ".png"):
+            shutil.copy(R / "figures" / f"{name}{ext}", figs / f"{name}{ext}")
+        shutil.copy(R / "figures" / "dark" / f"{name}.svg", figs / "dark" / f"{name}.svg")
+    print(f"synced data and {len(SITE_FIGURES)} figures into {site}")
 
 
 def main() -> None:
