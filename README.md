@@ -1,40 +1,38 @@
-# Kitsune Tales
+<p align="center"><img src="assets/logo.png" width="132" alt="Kitsune Tales logo"></p>
 
-Original fantasy light-novel fiction from a 4.6B-effective-parameter model, in Japanese and English.
+<h1 align="center">Kitsune Tales</h1>
 
-## Reproduce
+<p align="center">Original fantasy light-novel fiction from a 4.6B-effective-parameter model, in Japanese and English.</p>
 
-See [docs/REPRODUCE.md](docs/REPRODUCE.md). In short: `uv sync`, log in to the cloud GPU account and add the secrets, then run
-the orchestrator tracks; `python -m kitsune.eval.report`, `python -m kitsune.figures` and `python -m kitsune.readme` rebuild every table
-and figure from `reports/`.
+<p align="center">
+<a href="https://kitsune-tales-qwen.vercel.app"><b>Site</b></a> ·
+<a href="https://kitsune-tales-qwen.vercel.app/slides/">Slides</a> ·
+<a href="https://huggingface.co/whoashish115/kitsune-tales-e4b-jp">JP model</a> ·
+<a href="https://huggingface.co/whoashish115/kitsune-tales-e4b-en">EN model</a> ·
+<a href="REPORT.md">Report</a> ·
+<a href="https://wandb.ai/whoashish115-base/kitsune-tales">W&amp;B</a>
+</p>
 
-## Data
+<p align="center">
+<a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-Apache--2.0-7443d6"></a>
+<img alt="compute" src="https://img.shields.io/badge/compute-%2441.34-7443d6">
+</p>
 
-15,320 Japanese and 7,640 English generations from Qwen3.6-35B-A3B and
-Gemma 4 26B-A4B (both Apache-2.0); each model labels the other's stories. Datasets:
-[kitsune-tales-jp-fantasy-sft](https://huggingface.co/datasets/whoashish115/kitsune-tales-jp-fantasy-sft) and [kitsune-tales-en-fantasy-sft](https://huggingface.co/datasets/whoashish115/kitsune-tales-en-fantasy-sft); details in
-[docs/DATA_CARD.md](docs/DATA_CARD.md).
+Two LoRA fine-tunes of [Gemma 4 E4B](https://huggingface.co/google/gemma-4-E4B-it) (7.52B stored, 4.62B effective
+parameters) that write original, general-audience fantasy light-novel stories from a few genre tags, a title and a
+format. They were trained on filtered synthetic data from two Apache-2.0 models, then tested on prompts frozen before
+any training data existed, with 95 % bootstrap confidence intervals, a pairwise LLM judge that was itself validated,
+a safety suite, JGLUE and a memorization audit. Everything ran for $41.34 of GPU time.
 
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="reports/figures/dark/data_funnel.svg"><img src="reports/figures/data_funnel.png" alt="Data funnel" width="100%"></picture><br><sub>From generations to training examples.</sub></p>
+## Models
 
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="reports/figures/dark/data_rejections.svg"><img src="reports/figures/data_rejections.png" alt="Rejection reasons" width="100%"></picture><br><sub>The ten most frequent rejection reasons per language.</sub></p>
+| Model | Writes | Recipe | Weights | LoRA | GGUF | Data |
+|---|---|---|---|---|---|---|
+| **kitsune-tales-e4b-jp** | Japanese light-novel prose | SFT | [bf16](https://huggingface.co/whoashish115/kitsune-tales-e4b-jp) | [adapter](https://huggingface.co/whoashish115/kitsune-tales-e4b-jp-lora) | [Q4_K_M, Q8_0](https://huggingface.co/whoashish115/kitsune-tales-e4b-jp-gguf) | [10,090 examples](https://huggingface.co/datasets/whoashish115/kitsune-tales-jp-fantasy-sft) |
+| **kitsune-tales-e4b-en** | English prose, Japanese anime themes | SFT + DPO | [bf16](https://huggingface.co/whoashish115/kitsune-tales-e4b-en) | [adapter](https://huggingface.co/whoashish115/kitsune-tales-e4b-en-lora) | [Q4_K_M, Q8_0](https://huggingface.co/whoashish115/kitsune-tales-e4b-en-gguf) | [6,647 examples](https://huggingface.co/datasets/whoashish115/kitsune-tales-en-fantasy-sft) |
 
-## Training
-
-Nine logged runs (pilot, four ablations, two SFT, two DPO), all on [W&B](https://wandb.ai/whoashish115-base/kitsune-tales); trainer logs are in
-`reports/train_logs/` and interactive curves are on the [site](https://kitsune-tales-qwen.vercel.app#training).
-
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="reports/figures/dark/sft_loss.svg"><img src="reports/figures/sft_loss.png" alt="SFT loss" width="100%"></picture><br><sub>SFT loss: training (every 10 steps, smoothed) and validation.</sub></p>
-
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="reports/figures/dark/sft_dynamics.svg"><img src="reports/figures/sft_dynamics.png" alt="SFT dynamics" width="100%"></picture><br><sub>Learning rate, gradient norm, token accuracy and entropy during SFT.</sub></p>
-
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="reports/figures/dark/sft_runs.svg"><img src="reports/figures/sft_runs.png" alt="All SFT runs" width="100%"></picture><br><sub>All seven SFT runs on a common axis of training examples seen.</sub></p>
-
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="reports/figures/dark/ablations.svg"><img src="reports/figures/ablations.png" alt="Ablations" width="100%"></picture><br><sub>Ablations: data share (10 / 30 / 100 %) and LoRA rank (16 / 64 at 25 %).</sub></p>
-
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="reports/figures/dark/dpo_training.svg"><img src="reports/figures/dpo_training.png" alt="DPO" width="100%"></picture><br><sub>DPO loss, held-out preference accuracy and reward margin.</sub></p>
-
-<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="reports/figures/dark/dpo_rewards.svg"><img src="reports/figures/dpo_rewards.png" alt="DPO rewards" width="100%"></picture><br><sub>DPO implicit rewards and log-probabilities of chosen vs rejected answers.</sub></p>
+Both share the recipe: LoRA r = 32, α = 64 on every linear layer of the language model (77.8M
+trainable parameters, 0.97 %), bf16, one epoch, one H100.
 
 ## Results
 
@@ -75,6 +73,34 @@ significant in either language.
 
 Full per-system tables with confidence intervals are in [REPORT.md](REPORT.md#6-results).
 
+## Training
+
+Nine logged runs (pilot, four ablations, two SFT, two DPO), all on [W&B](https://wandb.ai/whoashish115-base/kitsune-tales); trainer logs are in
+`reports/train_logs/` and interactive curves are on the [site](https://kitsune-tales-qwen.vercel.app#training).
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="reports/figures/dark/sft_loss.svg"><img src="reports/figures/sft_loss.png" alt="SFT loss" width="100%"></picture><br><sub>SFT loss: training (every 10 steps, smoothed) and validation.</sub></p>
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="reports/figures/dark/sft_dynamics.svg"><img src="reports/figures/sft_dynamics.png" alt="SFT dynamics" width="100%"></picture><br><sub>Learning rate, gradient norm, token accuracy and entropy during SFT.</sub></p>
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="reports/figures/dark/sft_runs.svg"><img src="reports/figures/sft_runs.png" alt="All SFT runs" width="100%"></picture><br><sub>All seven SFT runs on a common axis of training examples seen.</sub></p>
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="reports/figures/dark/ablations.svg"><img src="reports/figures/ablations.png" alt="Ablations" width="100%"></picture><br><sub>Ablations: data share (10 / 30 / 100 %) and LoRA rank (16 / 64 at 25 %).</sub></p>
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="reports/figures/dark/dpo_training.svg"><img src="reports/figures/dpo_training.png" alt="DPO" width="100%"></picture><br><sub>DPO loss, held-out preference accuracy and reward margin.</sub></p>
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="reports/figures/dark/dpo_rewards.svg"><img src="reports/figures/dpo_rewards.png" alt="DPO rewards" width="100%"></picture><br><sub>DPO implicit rewards and log-probabilities of chosen vs rejected answers.</sub></p>
+
+## Data
+
+15,320 Japanese and 7,640 English generations from Qwen3.6-35B-A3B and
+Gemma 4 26B-A4B (both Apache-2.0); each model labels the other's stories. Datasets:
+[kitsune-tales-jp-fantasy-sft](https://huggingface.co/datasets/whoashish115/kitsune-tales-jp-fantasy-sft) and [kitsune-tales-en-fantasy-sft](https://huggingface.co/datasets/whoashish115/kitsune-tales-en-fantasy-sft); details in
+[docs/DATA_CARD.md](docs/DATA_CARD.md).
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="reports/figures/dark/data_funnel.svg"><img src="reports/figures/data_funnel.png" alt="Data funnel" width="100%"></picture><br><sub>From generations to training examples.</sub></p>
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="reports/figures/dark/data_rejections.svg"><img src="reports/figures/data_rejections.png" alt="Rejection reasons" width="100%"></picture><br><sub>The ten most frequent rejection reasons per language.</sub></p>
+
 ## Run it
 
 ```python
@@ -96,3 +122,57 @@ On a laptop CPU, use the 4-bit GGUF with llama.cpp (5.4 tok/s JP, 6.0 tok/s EN o
 The playground runs both models with every sampling control: live in the
 [Space](https://huggingface.co/spaces/whoashish115/kitsune-tales) (ZeroGPU), free in Colab
 ([notebooks/playground.ipynb](notebooks/playground.ipynb)), or locally with `uv run python demo/app.py`.
+
+## Repository layout
+
+```
+src/            the kitsune package: data pipeline, training, evaluation, figures, release tooling
+  data/         generation plans, filters, cross-labels, dedup
+  train/        SFT, DPO, merge
+  eval/         metrics, judge, leakage audit, report tables
+  gpu_jobs.py   every cloud GPU job, behind a budget guard
+configs/        data, training, evaluation and release settings
+data/           frozen test prompts, policy suite, DPO pairs
+reports/        every result: tables, judge verdicts, generations, trainer logs, figures, site export
+demo/           the Gradio playground (local GGUF and the ZeroGPU Space)
+notebooks/      Colab notebook for the playground
+slides/         Slidev deck, served by the site at /slides/
+docs/           decisions, budget, data card, model cards, reproduction guide
+tests/          125 CPU tests
+```
+
+The [site](https://kitsune-tales-qwen.vercel.app) has its own repository, [kitsune-tales-qwen-site](https://github.com/whoashish115/kitsune-tales-qwen-site); its numbers, figures and slides are exported from this repo
+(`python -m kitsune.site_export --site <path to the site checkout>`).
+
+## Reproduce
+
+See [docs/REPRODUCE.md](docs/REPRODUCE.md). In short: `uv sync`, log in to the cloud GPU account and add the secrets, then run
+the orchestrator tracks; `python -m kitsune.eval.report`, `python -m kitsune.figures` and `python -m kitsune.readme` rebuild every table
+and figure from `reports/`.
+
+## Compute
+
+$41.34 of cloud GPU time billed in total; the budget guard and per-account numbers are in [docs/BUDGET.md](docs/BUDGET.md).
+
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="reports/figures/dark/compute.svg"><img src="reports/figures/compute.png" alt="Compute by phase" width="100%"></picture><br><sub>Measured cost by phase from the per-job ledger.</sub></p>
+
+## Limitations
+
+- No human evaluation. Quality rests on rule-based metrics and one LLM judge whose full-output verdicts are confounded by length.
+- Everything was learned from two larger models, including their clichés; both released models lose clearly to the 35B teacher.
+- Safety filters are lexicon-based: they miss paraphrases and undercount hateful framing that avoids listed terms.
+- Titles that ask the model to drop fantasy are followed more often than by the base model.
+- The Japanese release is SFT only; DPO with refusal pairs was validated in English and not rerun for Japanese.
+
+## License and citation
+
+Apache-2.0 for the code, adapters, merged weights and datasets (the base model and both generators are Apache-2.0).
+
+```bibtex
+@misc{kumar2026kitsunetales,
+  title  = {Kitsune Tales: Fantasy Light-Novel Fine-Tunes of Gemma 4 E4B in Japanese and English},
+  author = {Kumar, Ashish},
+  year   = {2026},
+  url    = {https://github.com/whoashish115/kitsune-tales-qwen}
+}
+```

@@ -198,3 +198,118 @@ Systems (all decoded identically: temperature 0.8, top-p 0.95, 3 seeds):
 |---|---|---|---|
 | judge | 93.3 [86.7, 98.3] | loop: 100 %, script_leak: 100 %, shuffle: 100 %, truncate: 100 %, wrong_story: 67 % | 60 |
 <!-- END:results_en -->
+
+## 7. Analysis
+
+**What fine-tuning fixed (Japanese, 270 prompts × 3 seeds, 95 % CIs in §6).** Zero-shot, the base model ignores the
+requested length: 0.4 % of its outputs fall in the target range. It also formats 76 % of outputs as markdown, and
+17 % are degenerate (unfinished or broken). The SFT model follows the request: 50 % length adherence, 0 % markdown,
+under 1 % degenerate, and higher diversity across seeds. It also refuses 75 % of held-out disallowed requests
+(base: 0 %), with a 5 % policy-violation rate against 85 % for base. General ability is preserved: the four JGLUE tasks
+in lm-eval stay within their standard errors. Validation perplexity falls from 6.67 to 3.31.
+
+**What the judge says, and why.** On full outputs, the validated judge (86.7 % on known-answer pairs) prefers **base**
+over the released model (net −0.44 [−0.55, −0.34]). It also prefers the 35B teacher (−0.49), and rates SFT and
+SFT + DPO equal. But base's outputs are about 1.7× longer (median 1,397 vs 828 characters) and usually exceed the
+requested length. Kitsune loses 65 % of pairs where base is at least twice as long, against 48 % where base is
+1.2–2× as long. LLM judges are known to prefer longer answers [Zheng et al. 2023], and the rubric's instruction not
+to reward length did not remove this.
+
+We therefore added a **length-matched check** (D-032): the same 60 short-story prompts, with both systems' outputs cut
+to the same 600-character opening at a sentence end, and the judge told to compare prose only. There the preference
+**reverses**: Kitsune wins 35 %, ties 42 % and loses 23 % (net +0.12 [−0.07, +0.32]). Controlled for length, the
+fine-tune's prose is on par with base's, and nominally ahead. So base's advantage on full outputs is mostly length,
+and much of that length is text the request did not ask for.
+
+**DPO.** DPO on complete teacher labels (v2) improved length adherence (50 % → 67 %) and fantasy adherence on
+adversarial titles (53 % → 69 %). But refusals fell from 75 % to 49 %, and policy violations rose from 5 % to 21 %:
+the model redirected disallowed requests into fantasy stories, and sometimes kept the real person in them. The
+judge rated DPO v2 and SFT equal. Under the pre-registered rule, **the SFT model is released**. The preference data
+contained no refusal examples, and the English DPO adds safety pairs for exactly this reason.
+
+**English (`kitsune-tales-e4b-en`).** The same recipe transfers. SFT raises length adherence from 22 % to 71 % and
+removes markdown (95 % → 0 %) and degenerate outputs (19 % → 0 %). It refuses 93 % of held-out disallowed requests
+(base: 0 %) with 0 % policy violations (base: 79 %). Validation perplexity falls from 7.59 to 3.27. DPO with safety
+pairs adds 10 points of length adherence (81 %) and keeps 0 % violations. Its held-out preference accuracy is only
+54 %: two samples from an already good SFT model are often near-ties, and the teacher could not decide consistently
+on 905 of 2,400 prompts. The judge rates DPO and SFT about equal (net +0.07 [−0.05, +0.18]), so DPO passes the release
+rule and ships. Against base the pattern repeats the Japanese one. Full outputs lose (−0.57), but same-length
+2,000-character openings are at parity (−0.03 [−0.22, +0.15], 50 % ties). The judge is more reliable in English
+(93.3 % on known-answer pairs) than in Japanese (86.7 %).
+
+**Memorization and general ability.** No Japanese test output shares a 32-character span with the training
+responses, for any system. At 16 characters the longest match is 28 characters. The audit is checked on a known
+positive: a training response against itself gives 100 % overlap. In English, the fine-tuned models reuse slightly
+more 32-character spans from training than base (1.6 % vs 0.2 % of windows). Only one of 270 outputs contains a span
+of 100+ characters (longest 122), so there is no substantive copying. On four JGLUE tasks (lm-eval, 500 items each),
+the released Japanese model scores:
+
+| Task | Base | Released model | Change |
+|---|---|---|---|
+| JCommonsenseQA | 59.4 | 65.8 | +6.4 (≈2 SE) |
+| JNLI | 58.4 | 55.4 | −3.0 (≈1 SE) |
+| MARC-ja | 93.0 | 92.6 | −0.4 |
+| XWinograd | 68.8 | 65.6 | −3.2 (≈1 SE) |
+
+There is no clear regression.
+
+**Ablations.** Validation loss falls steadily with data (10 % → 30 % → 100 %: 1.364 → 1.288 → 1.200). At a fixed
+25 % subset, rank 64 beats rank 16 (1.283 vs 1.319). A rank-32 run at 25 % was not trained, so the rank comparison
+has two points.
+
+**Five failure cases** (released Japanese model, the lowest-scoring seed-0 test outputs by the automatic checks):
+
+1. `test-0242` (synopsis, 626 chars): too long, and too few fantasy terms. The slow-life framing crowds out the
+   fantasy lexicon.
+2. `test-0057` (continuation, Villainess): none of the genre cues. It continues the passage's scene without
+   villainess or reincarnation markers.
+3. `test-0089` (continuation): ends mid-sentence ("…例えば、あの子供の足場板だって、", "for example, even that child's
+   scaffold board…") despite a normal stop. This is scored as degenerate.
+4. `test-0125` (synopsis): the title's premise ("protects the kingdom alone") is paraphrased, but no title keyword
+   appears.
+5. `test-0081` (continuation): flagged unsafe for 自殺行為 ("a suicidal move"), an idiom. This is a lexicon false
+   positive, so the unsafe rates are upper bounds.
+
+The translated gallery (`reports/translations_jp.json`) shows qualitative slips the metrics miss:
+- characters switching first-person pronouns (僕/私);
+- a male character addressed with 貴女;
+- synopses written as first-person scenes;
+- one synopsis (test-0030) in which a character cuts his own throat, which the self-harm lexicon did not catch.
+
+## 8. Limitations
+
+- **No human evaluation.** Quality claims rest on rule-based proxies and one LLM judge. The judge is length-confounded
+  and prefers base, and creative-writing judges agree with humans only ~73 % of the time even at best
+  [Fein et al. 2025].
+- **Synthetic-data ceiling.** Everything the model learned was written by two larger models, whose habits it inherits
+  (the default-name collapse in the English data is one visible example).
+- **Lexicon-based safety.** Filters miss paraphrase (the throat-cutting synopsis) and flag idioms (自殺行為,
+  "suicide mission"). The violation metric keys on the eval suite's names and undercounts hateful framing.
+- **Adversarial titles.** Titles that tell the model to stop writing fantasy are followed more often than by base.
+  No adversarial examples were in training.
+- **DPO trade-off.** Quality-only DPO eroded refusals. The released Japanese model is therefore SFT; a Japanese
+  DPO with refusal pairs was not trained.
+- **Small ablations.** The rank ablation has two points (r = 16 and 64) at a single 25 % data size.
+- **Single annotator.** Manual inspection and the translations come from one person, the maintainer.
+
+## 9. Ethics and safety
+
+General-audience only. Training data is filtered for sexual content, self-harm, heavy gore, PII, real people and existing
+IP, and a held-out policy suite (disjoint names and titles) measures refusals and fantasy adherence.
+
+## 10. Reproducibility
+
+Every command, with its measured cost, is in `docs/REPRODUCE.md`; `make eval` rebuilds every number from committed generations.
+
+<!-- BEGIN:budget -->
+Cloud GPU spend as billed; the per-job breakdown with estimates and measured
+wall-clock is in `reports/cost_ledger.jsonl` and `docs/BUDGET.md`.
+
+- `kitsune30`: **$28.29** of $30.00 credit (billed; hard stop $29.60)
+- `kitsune12`: **$13.06** of $14.28 credit (billed; hard stop $13.90)
+- **Total: $41.34**
+<!-- END:budget -->
+
+## References
+
+See `docs/LITERATURE.md` for the full list with arXiv identifiers and how deeply each was read.
