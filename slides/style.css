@@ -1,17 +1,16 @@
-/* Same palette as the site: sumi-grey ink on a cool off-white, one blue-violet accent. */
+/* Plain grey-and-white deck: black ink on white, grey boxes, no accent colour. */
 :root {
-  --k-ink: #141418;
-  --k-ink-2: #4a4a54;
-  --k-muted: #7d7d88;
-  --k-line: #dedee3;
-  --k-accent: #5048c8;
-  --k-accent-soft: #ecebfb;
-  --slidev-theme-primary: #5048c8;
+  --k-ink: #18181b;
+  --k-ink-2: #3f3f46;
+  --k-muted: #71717a;
+  --k-line: #e4e4e7;
+  --k-box: #f4f4f5;
+  --slidev-theme-primary: #3f3f46;
 }
 
 .slidev-layout {
   color: var(--k-ink);
-  background: #fbfbfc;
+  background: #ffffff;
   font-size: 1.05rem;
 }
 
@@ -29,7 +28,7 @@
 }
 
 .slidev-layout h3 {
-  color: var(--k-accent);
+  color: var(--k-ink);
   font-size: 0.95rem;
   font-weight: 700;
   margin-bottom: 0.4rem;
@@ -46,8 +45,8 @@
 }
 
 .slidev-layout a {
-  color: var(--k-accent);
-  border-bottom: 1px solid var(--k-accent-soft);
+  color: var(--k-ink);
+  border-bottom: 1px solid var(--k-line);
 }
 
 .slidev-layout table {
@@ -62,9 +61,19 @@
 
 .slidev-layout code {
   color: var(--k-ink);
-  background: var(--k-accent-soft);
+  background: var(--k-box);
   border-radius: 4px;
   padding: 0 0.3em;
+}
+
+.box {
+  background: var(--k-box);
+  border: 1px solid var(--k-line);
+  border-radius: 8px;
+}
+
+.box .text-xs {
+  color: var(--k-ink-2);
 }
 
 .fig {
@@ -82,14 +91,6 @@
   margin-top: 0.5rem;
 }
 
-.big {
-  font-family: "Shippori Mincho B1", serif;
-  font-size: 2.6rem;
-  font-weight: 800;
-  color: var(--k-accent);
-  line-height: 1;
-}
-
 .kicker {
   font-size: 0.8rem;
   color: var(--k-muted);
@@ -99,7 +100,8 @@
   font-family: "JetBrains Mono", monospace;
   font-size: 0.8rem;
   line-height: 1.7;
-  background: #f1f1f4;
+  background: var(--k-box);
+  border: 1px solid var(--k-line);
   border-radius: 8px;
   padding: 0.9rem 1.1rem;
   white-space: pre-line;

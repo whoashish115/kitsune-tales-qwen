@@ -34,6 +34,7 @@ _ENV = {
     "TOKENIZERS_PARALLELISM": "false",
     "PYTHONUNBUFFERED": "1",
     "HF_HUB_DISABLE_PROGRESS_BARS": "1",
+    # FlashInfer's top-k/top-p sampler JIT-compiles with nvcc, which the slim image lacks; use vLLM's torch sampler.
     "VLLM_USE_FLASHINFER_SAMPLER": "0",
     # Same reason for MoE/FP8 paths: stay on vLLM's prebuilt Triton/CUTLASS kernels (no JIT toolchain needed).
     "VLLM_USE_FLASHINFER_MOE_FP8": "0",
@@ -78,6 +79,28 @@ MODEL_IDS: dict[str, tuple[str, str]] = {
 def _git_commit() -> str:
     raise NotImplementedError
 
+@contextmanager
+def ledger(
+    phase: str,
+    job: str,
+    gpu: str,
+    est_hours: float,
+    cpu: float,
+    mem_gib: float,
+    planned_remaining: float = 0.0,
+    notes: str = "",
+) -> Iterator[cost.LedgerEntry]:
+    """Guard + ledger row before launch; measured wall-clock after (an upper bound on billed time)."""
+    e = cost.open_job(phase, job, gpu, est_hours, cpu, mem_gib, planned_remaining, notes)
+    print(f"[budget] {e.account}: launching {job} on {gpu}, estimate ${e.est_usd:.3f} ({est_hours:.2f} h)")
+    t0 = time.time()
+    try:
+        yield e
+    finally:
+        c = cost.close_job(job, (time.time() - t0) / 3600)
+        acct_total = cost.spent(cost.read_ledger(), c.account)
+        print(f"[budget] {job}: measured ${c.actual_usd:.3f}; {c.account} total ${acct_total:.2f}")
+
 def _upload(files: dict[str, str]) -> None:
     """Upload local files to the data Volume: {local_path: remote_path}."""
     with data_vol.batch_upload(force=True) as batch:
@@ -90,15 +113,17 @@ def _download(remote: str, local: str) -> None:
         for chunk in data_vol.read_file(remote):
             f.write(chunk)
 
+def _save_json(path: str, obj: Any) -> None:
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    Path(path).write_text(json.dumps(obj, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
+
+
+
 def _write_jsonl_gz(path: str, rows: list[dict]) -> None:
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     with gzip.open(path, "wt", encoding="utf-8") as f:
         for r in rows:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
-
-def _save_json(path: str, obj: Any) -> None:
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
-    Path(path).write_text(json.dumps(obj, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
 
 def _read_jsonl_any(path: str) -> list[dict]:
     op = gzip.open if path.endswith(".gz") else open
@@ -106,6 +131,62 @@ def _read_jsonl_any(path: str) -> list[dict]:
         return [json.loads(x) for x in f if x.strip()]
 
 # =========================================================================== Phase 2: hello + weights
+
+@app.function(
+    scaledown_window=2, image=cpu_image, gpu="T4", cpu=1, memory=1024, timeout=300, secrets=[wandb_secret]
+)
+def hello_gpu(git_commit: str, cumulative_usd: float) -> dict:
+    """Prove the GPU, the W&B secret and run logging work (logs a tiny dummy run)."""
+    import subprocess
+
+    import wandb
+
+    smi = subprocess.run(
+        ["nvidia-smi", "--query-gpu=name,memory.total,driver_version", "--format=csv,noheader"],
+        capture_output=True,
+        text=True,
+        check=False,
+    ).stdout.strip()
+    run = wandb.init(
+        project=versions.WANDB_PROJECT,
+        entity=os.environ.get("WANDB_ENTITY"),
+        group="setup",
+        job_type="hello",
+        name="hello-gpu",
+        config={"git_commit": git_commit, "gpu": smi},
+    )
+    for step in range(5):
+        run.log({"dummy/loss": 1.0 / (step + 1), "cost/cumulative_usd": cumulative_usd}, step=step)
+    url = run.url
+    run.finish()
+    return {"nvidia_smi": smi, "wandb_url": url}
+
+@app.local_entrypoint()
+def hello() -> None:
+    raise NotImplementedError
+
+@app.function(
+    scaledown_window=2, image=cpu_image, cpu=4, memory=8192, timeout=3600, volumes={MODELS_DIR: models_vol}
+)
+def download_weights(repo_id: str, revision: str) -> dict:
+    """Download a snapshot into the models Volume on a CPU container (no GPU billed)."""
+    from huggingface_hub import snapshot_download
+
+    t0 = time.time()
+    path = snapshot_download(repo_id, revision=revision, max_workers=16)
+    models_vol.commit()
+    size = sum(f.stat().st_size for f in Path(path).rglob("*") if f.is_file())
+    return {"repo": repo_id, "gb": round(size / 1e9, 2), "minutes": round((time.time() - t0) / 60, 1)}
+
+def _ensure_weights(which: str) -> None:
+    for w in which.split(","):
+        repo, rev = MODEL_IDS[w]
+        with ledger("infra", f"download-{w}", "CPU", 0.3, 4, 8, notes=repo):
+            print(download_weights.remote(repo, rev))
+
+@app.local_entrypoint()
+def download(which: str = "base") -> None:
+    raise NotImplementedError
 
 @app.function(
     scaledown_window=2, image=cpu_image, cpu=1, memory=1024, timeout=600, volumes={MODELS_DIR: models_vol}
@@ -120,6 +201,19 @@ def delete_weights(repo_id: str) -> str:
         models_vol.commit()
         return f"deleted {d}"
     return f"not present: {d}"
+
+@app.local_entrypoint()
+def purge(which: str) -> None:
+    for w in which.split(","):
+        print(delete_weights.remote(MODEL_IDS[w][0]))
+
+@app.function(scaledown_window=2, image=gpu_image, gpu="L4", cpu=4, memory=65536, timeout=2400, volumes=VOLS)
+def smoke_hf() -> dict:
+    from kitsune.smoke import run_all
+
+    res = run_all(versions.BASE_MODEL, versions.BASE_REVISION, f"{DATA_DIR}/smoke")
+    data_vol.commit()
+    return res
 
 @app.function(scaledown_window=2, image=gpu_image, gpu="L4", cpu=4, memory=32768, timeout=1500, volumes=VOLS)
 def smoke_vllm(use_adapter: bool) -> dict:
@@ -171,6 +265,32 @@ def smoke_merge() -> dict:
     return res
 
 @app.local_entrypoint()
+def smoke_rerun(parts: str = "vllm,merge") -> None:
+    """Re-run selected smoke checks and update reports/smoke.json."""
+    rep = json.loads(Path("reports/smoke.json").read_text(encoding="utf-8"))
+    if "vllm" in parts:
+        with ledger("2", "smoke-vllm-rerun", "L4", 0.2, 4, 32, notes="after VLLM_USE_FLASHINFER_SAMPLER=0"):
+            rep["vllm"] = smoke_vllm.remote(True)
+    if "merge" in parts:
+        with ledger("2", "smoke-merge-rerun", "L4", 0.15, 4, 64, notes="fp32 merge + KL/top-1"):
+            rep["hf"]["merge"] = smoke_merge.remote()
+    _save_json("reports/smoke.json", rep)
+    for k in ("vllm",):
+        print(
+            json.dumps({kk: vv for kk, vv in rep[k].items() if kk != "trace"}, ensure_ascii=False, indent=1)[
+                :3000
+            ]
+        )
+    print(json.dumps({kk: vv for kk, vv in rep["hf"]["merge"].items() if kk != "trace"}, indent=1)[:2000])
+
+BAKEOFF_GPU = {"base": "L4", "alt": "L4"}
+
+@app.function(scaledown_window=2, image=gpu_image, gpu="L4", cpu=4, memory=32768, timeout=1800, volumes=VOLS)
+def bakeoff_generate(model_key: str, prompts: list[dict]) -> list[dict]:
+    """Zero-shot generations for the D-001 bake-off (prompts are NOT from the test set)."""
+    raise NotImplementedError
+
+@app.local_entrypoint()
 def bakeoff() -> None:
     import random
 
@@ -198,3 +318,40 @@ def bakeoff() -> None:
     summary = summarize(rows)
     _save_json("reports/bakeoff/summary.json", summary)
     print(json.dumps(summary, ensure_ascii=False, indent=1))
+
+
+
+def _pull(mode: str) -> None:
+    raise NotImplementedError
+
+@app.local_entrypoint()
+def data_pull(mode: str = "full") -> None:
+    """Copy raw generations/labels for ``mode`` from the Volume into data/raw/<mode>/."""
+    raise NotImplementedError
+
+@app.local_entrypoint()
+def data_push(lang: str = "ja") -> None:
+    """Upload the processed dataset (built locally by the pipeline) for training."""
+    d = "processed_en" if lang == "en" else "processed"
+    _upload({f"data/{d}/train.jsonl": f"/{d}/train.jsonl", f"data/{d}/val.jsonl": f"/{d}/val.jsonl"})
+    print(f"uploaded data/{d}/{{train,val}}.jsonl")
+
+# =========================================================================== Phases 4-5: training
+
+@app.function(scaledown_window=2, image=gpu_image, gpu="L4", cpu=4, memory=65536, timeout=3600, volumes=VOLS)
+def merge_fn(
+    adapter_run: str, base_model: str = versions.BASE_MODEL, base_revision: str = versions.BASE_REVISION
+) -> dict:
+    from kitsune.train.merge import merge_and_verify
+
+    data_vol.reload()
+    rep = merge_and_verify(
+        base_model,
+        base_revision,
+        f"{DATA_DIR}/runs/{adapter_run}/adapter",
+        f"{DATA_DIR}/merged/{adapter_run}",
+    )
+    data_vol.commit()
+    return rep
+
+# =========================================================================== Phase 6: judge, perplexity, regression

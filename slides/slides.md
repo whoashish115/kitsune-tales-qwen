@@ -46,7 +46,7 @@ Fantasy light-novel fine-tunes of Gemma 4 E4B, in Japanese and English
 - Light-novel fantasy is a large genre with strong conventions: isekai, villainess, slow life; long descriptive titles; dialogue-heavy prose
 - That makes it a good target for a **small, specialised** model that runs on a laptop
 
-<div class="mt-10 p-5 rounded-lg" style="background: var(--k-accent-soft)">
+<div class="box mt-10 p-5">
 
 **Question.** How close can a 4B model get to its 35B teacher on this task, on an individual's budget, measured honestly?
 
@@ -139,11 +139,11 @@ A zero-shot bake-off with a rule written in advance: switch from Qwen3.5-4B to G
 No web fiction. Two Apache-2.0 models write the stories; each labels the other's.
 
 <div class="grid grid-cols-5 gap-3 my-6">
-<div class="rounded-lg p-3" style="background: var(--k-accent-soft)"><div class="kicker">01</div><div class="font-bold text-sm mb-1">Seeds</div><div class="text-xs leading-snug" style="color: var(--k-ink-2)">Titles, genre mixes and formats; titles close to a test title are dropped</div></div>
-<div class="rounded-lg p-3" style="background: var(--k-accent-soft)"><div class="kicker">02</div><div class="font-bold text-sm mb-1">Generate</div><div class="text-xs leading-snug" style="color: var(--k-ink-2)">Qwen3.6-35B-A3B and Gemma 4 26B-A4B write the stories</div></div>
-<div class="rounded-lg p-3" style="background: var(--k-accent-soft)"><div class="kicker">03</div><div class="font-bold text-sm mb-1">Cross-label</div><div class="text-xs leading-snug" style="color: var(--k-ink-2)">Each model labels the other's stories: fantasy, audience, real people / IP, fit</div></div>
-<div class="rounded-lg p-3" style="background: var(--k-accent-soft)"><div class="kicker">04</div><div class="font-bold text-sm mb-1">Filter</div><div class="text-xs leading-snug" style="color: var(--k-ink-2)">Script, length, repetition, safety and PII rules, then MinHash dedup</div></div>
-<div class="rounded-lg p-3" style="background: var(--k-accent-soft)"><div class="kicker">05</div><div class="font-bold text-sm mb-1">Split</div><div class="text-xs leading-snug" style="color: var(--k-ink-2)">Train / validation, plus 135 refusal and redirect templates</div></div>
+<div class="box p-3"><div class="kicker">01</div><div class="font-bold text-sm mb-1">Seeds</div><div class="text-xs leading-snug">Titles, genre mixes and formats; titles close to a test title are dropped</div></div>
+<div class="box p-3"><div class="kicker">02</div><div class="font-bold text-sm mb-1">Generate</div><div class="text-xs leading-snug">Qwen3.6-35B-A3B and Gemma 4 26B-A4B write the stories</div></div>
+<div class="box p-3"><div class="kicker">03</div><div class="font-bold text-sm mb-1">Cross-label</div><div class="text-xs leading-snug">Each model labels the other's stories: fantasy, audience, real people / IP, fit</div></div>
+<div class="box p-3"><div class="kicker">04</div><div class="font-bold text-sm mb-1">Filter</div><div class="text-xs leading-snug">Script, length, repetition, safety and PII rules, then MinHash dedup</div></div>
+<div class="box p-3"><div class="kicker">05</div><div class="font-bold text-sm mb-1">Split</div><div class="text-xs leading-snug">Train / validation, plus 135 refusal and redirect templates</div></div>
 </div>
 
 | | Generations | Kept | Train / val |
