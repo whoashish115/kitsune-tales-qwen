@@ -1,11 +1,11 @@
-/* Plain grey-and-white deck: black ink on white, grey boxes, no accent colour. */
+/* Plain grey-and-white deck: slate ink on white, cool light-grey boxes, no accent colour. */
 :root {
-  --k-ink: #18181b;
-  --k-ink-2: #3f3f46;
-  --k-muted: #71717a;
-  --k-line: #e4e4e7;
-  --k-box: #f4f4f5;
-  --slidev-theme-primary: #3f3f46;
+  --k-ink: #0f172a;
+  --k-ink-2: #334155;
+  --k-muted: #64748b;
+  --k-line: #e2e8f0;
+  --k-box: #f1f5f9;
+  --slidev-theme-primary: #334155;
 }
 
 .slidev-layout {

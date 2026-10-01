@@ -257,20 +257,20 @@ def explore_show(lang: str, pid: str) -> tuple[str, str, str, str, str, str, str
 
 # --------------------------------------------------------------------------------------------- UI
 
-# Palette of the Kitsune site and the earlier playground: violet-grey neutrals, deep indigo selection states, and the
-# logo violet (#5848f8) reserved for the primary action. Light and dark values mirror each other.
+# Cool slate-grey neutrals with the logo violet (#5848f8) reserved for the primary action and focus.
+# Light and dark values mirror each other.
 NEUTRAL = gr.themes.Color(
-    c50="#f7f7fa",
-    c100="#f0eff6",
-    c200="#e4e2ec",
-    c300="#c8c5d3",
-    c400="#9a97a6",
-    c500="#77747f",
-    c600="#5a5864",
-    c700="#47464f",
-    c800="#302f37",
-    c900="#1c1b22",
-    c950="#121216",
+    c50="#f8fafc",
+    c100="#f1f5f9",
+    c200="#e2e8f0",
+    c300="#cbd5e1",
+    c400="#94a3b8",
+    c500="#64748b",
+    c600="#475569",
+    c700="#334155",
+    c800="#1e293b",
+    c900="#0f172a",
+    c950="#020617",
 )
 PRIMARY = gr.themes.Color(
     c50="#f1f0ff",
@@ -293,22 +293,22 @@ THEME = gr.themes.Base(
     font_mono=[gr.themes.GoogleFont("Roboto Mono"), "ui-monospace", "monospace"],
     radius_size="lg",
 ).set(
-    body_background_fill="#f4f4f8",
-    body_background_fill_dark="#121216",
+    body_background_fill="#f8fafc",
+    body_background_fill_dark="#020617",
     background_fill_primary="#ffffff",
-    background_fill_primary_dark="#1c1b22",
-    background_fill_secondary="#f0eff6",
-    background_fill_secondary_dark="#24232b",
+    background_fill_primary_dark="#0f172a",
+    background_fill_secondary="#f1f5f9",
+    background_fill_secondary_dark="#1e293b",
     block_background_fill="#ffffff",
-    block_background_fill_dark="#1c1b22",
-    block_border_color="#e4e2ec",
-    block_border_color_dark="#302f37",
-    border_color_primary="#e4e2ec",
-    border_color_primary_dark="#302f37",
+    block_background_fill_dark="#0f172a",
+    block_border_color="#e2e8f0",
+    block_border_color_dark="#1e293b",
+    border_color_primary="#e2e8f0",
+    border_color_primary_dark="#1e293b",
     input_background_fill="#ffffff",
-    input_background_fill_dark="#1c1b22",
-    input_border_color="#c8c5d3",
-    input_border_color_dark="#48464f",
+    input_background_fill_dark="#0f172a",
+    input_border_color="#cbd5e1",
+    input_border_color_dark="#475569",
     input_border_width="1px",
     input_border_width_dark="1px",
     input_border_color_focus="#5848f8",
@@ -318,11 +318,11 @@ THEME = gr.themes.Base(
     block_border_width="1px",
     block_border_width_dark="1px",
     color_accent="#5848f8",
-    color_accent_soft="#e6e3ff",
+    color_accent_soft="#e0e7ff",
     color_accent_soft_dark="#2d2677",
     checkbox_label_background_fill="transparent",
     checkbox_label_background_fill_dark="transparent",
-    checkbox_label_background_fill_selected="#e6e3ff",
+    checkbox_label_background_fill_selected="#e0e7ff",
     checkbox_label_background_fill_selected_dark="#2d2677",
     checkbox_label_text_color_selected="#1d1170",
     checkbox_label_text_color_selected_dark="#e4e0ff",
@@ -336,23 +336,23 @@ THEME = gr.themes.Base(
     button_primary_text_color_dark="#ffffff",
     button_secondary_background_fill="transparent",
     button_secondary_background_fill_dark="transparent",
-    button_secondary_background_fill_hover="#f0eff6",
-    button_secondary_background_fill_hover_dark="#24232b",
-    button_secondary_border_color="#c8c5d3",
-    button_secondary_border_color_dark="#48464f",
+    button_secondary_background_fill_hover="#f1f5f9",
+    button_secondary_background_fill_hover_dark="#1e293b",
+    button_secondary_border_color="#cbd5e1",
+    button_secondary_border_color_dark="#475569",
     button_secondary_text_color="#4a3aea",
     button_secondary_text_color_dark="#cdc8ff",
     slider_color="#5848f8",
     slider_color_dark="#8478f5",
-    block_label_background_fill="#f0eff6",
-    block_label_background_fill_dark="#24232b",
+    block_label_background_fill="#f1f5f9",
+    block_label_background_fill_dark="#1e293b",
 )
 
 CSS = """
 .gradio-container{max-width:1280px!important}
 #brand img{border-radius:0}
-#side{background:#ecebf4}
-.dark #side{background:#18171d}
+#side{background:#f1f5f9}
+.dark #side{background:#0f172a}
 .story textarea{font-size:15px!important;line-height:1.9!important}
 .gradio-container .wrap:has(input){border-color:var(--input-border-color)!important}
 footer{display:none!important}
