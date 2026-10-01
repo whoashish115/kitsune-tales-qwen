@@ -1,0 +1,107 @@
+/* Same palette as the site: sumi-grey ink on a cool off-white, one blue-violet accent. */
+:root {
+  --k-ink: #141418;
+  --k-ink-2: #4a4a54;
+  --k-muted: #7d7d88;
+  --k-line: #dedee3;
+  --k-accent: #5048c8;
+  --k-accent-soft: #ecebfb;
+  --slidev-theme-primary: #5048c8;
+}
+
+.slidev-layout {
+  color: var(--k-ink);
+  background: #fbfbfc;
+  font-size: 1.05rem;
+}
+
+.slidev-layout h1 {
+  font-family: "Shippori Mincho B1", serif;
+  font-weight: 800;
+  font-size: 2.2rem;
+  line-height: 1.15;
+  margin-bottom: 1.1rem;
+}
+
+.slidev-layout h1 + p {
+  opacity: 1;
+  color: var(--k-ink-2);
+}
+
+.slidev-layout h3 {
+  color: var(--k-accent);
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+
+.slidev-layout li,
+.slidev-layout p {
+  color: var(--k-ink-2);
+  line-height: 1.6;
+}
+
+.slidev-layout strong {
+  color: var(--k-ink);
+}
+
+.slidev-layout a {
+  color: var(--k-accent);
+  border-bottom: 1px solid var(--k-accent-soft);
+}
+
+.slidev-layout table {
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.slidev-layout th {
+  color: var(--k-muted);
+  font-weight: 500;
+}
+
+.slidev-layout code {
+  color: var(--k-ink);
+  background: var(--k-accent-soft);
+  border-radius: 4px;
+  padding: 0 0.3em;
+}
+
+.fig {
+  display: block;
+  margin: 0 auto;
+  max-height: 340px;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.cap {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--k-muted);
+  margin-top: 0.5rem;
+}
+
+.big {
+  font-family: "Shippori Mincho B1", serif;
+  font-size: 2.6rem;
+  font-weight: 800;
+  color: var(--k-accent);
+  line-height: 1;
+}
+
+.kicker {
+  font-size: 0.8rem;
+  color: var(--k-muted);
+}
+
+.request {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+  line-height: 1.7;
+  background: #f1f1f4;
+  border-radius: 8px;
+  padding: 0.9rem 1.1rem;
+  white-space: pre-line;
+  color: var(--k-ink);
+}

@@ -299,7 +299,14 @@ def sync_site(site: Path) -> None:
         for ext in (".svg", ".png"):
             shutil.copy(R / "figures" / f"{name}{ext}", figs / f"{name}{ext}")
         shutil.copy(R / "figures" / "dark" / f"{name}.svg", figs / "dark" / f"{name}.svg")
-    print(f"synced data and {len(SITE_FIGURES)} figures into {site}")
+    # The Slidev deck (slides/, built with `npm run build`) is served by the site at /slides/.
+    deck, dst = R.parent / "slides" / "dist", site / "public" / "slides"
+    if deck.exists():
+        shutil.rmtree(dst, ignore_errors=True)
+        shutil.copytree(deck, dst, ignore=shutil.ignore_patterns("_redirects", "404.html"))
+    else:
+        print("slides/dist not found; run `npm run build` in slides/ to include the deck")
+    print(f"synced data, {len(SITE_FIGURES)} figures and the slides into {site}")
 
 
 def main() -> None:

@@ -68,9 +68,9 @@ desktop.ini
 .vscode/
 *.swp
 reports/scratch_*.log
-build/
 !data/test_set.sha256
 
 # Local run state and console logs
 logs/
 reports/orchestrator/
+node_modules/
