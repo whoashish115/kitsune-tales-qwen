@@ -1,17 +1,20 @@
 cff-version: 1.2.0
-message: "If you use Kitsune, please cite it as below."
-title: "Kitsune-Tales-E4B: a small open model for original Japanese fantasy light-novel fiction"
+message: "If you use Kitsune Tales, please cite it as below."
+title: "Kitsune Tales: Fantasy Light-Novel Fine-Tunes of Gemma 4 E4B in Japanese and English"
 type: software
 authors:
   - family-names: Kumar
     given-names: Ashish
 license: Apache-2.0
 version: 0.1.0
+repository-code: "https://github.com/whoashish115/kitsune-tales-qwen"
+url: "https://kitsune-tales-qwen.vercel.app"
 date-released: 2026-10-01
 keywords:
   - large language models
   - LoRA
   - Japanese
+  - English
   - creative writing
   - light novel
 references:

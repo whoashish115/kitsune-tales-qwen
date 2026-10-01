@@ -15,7 +15,7 @@ APP     := src/gpu_jobs.py
 ACCOUNT ?= kitsune30
 RUN      = MODAL_PROFILE=$(ACCOUNT) $(CLOUD) run
 
-.PHONY: help gpu gpu-login gpu-secrets upload install test test-offline lint typecheck fmt data seeds train pilot main dpo merge gen-eval judge eval readme demo budget clean
+.PHONY: help gpu gpu-login gpu-secrets upload install test test-offline lint typecheck fmt data verify-test train pilot main dpo merge gen-eval judge eval readme demo budget clean
 
 help:
 	@grep -E '^#' Makefile | sed 's/^# \{0,1\}//'
@@ -40,8 +40,8 @@ fmt:
 	uv run ruff format src tests demo
 	uv run ruff check --fix src tests demo
 
-seeds:
-	$(PY) -m kitsune.data.cli freeze-test
+verify-test:
+	$(PY) -m kitsune.data.cli verify-test
 
 gpu-login:
 	$(CLOUD) token new --profile $(ACCOUNT)
@@ -53,7 +53,7 @@ gpu-secrets:
 gpu:
 	$(RUN) $(APP)::$(JOB)
 
-data: seeds
+data: verify-test
 	$(RUN) $(APP)::data --mode probe --gen gen1 --n-prompts 500
 	$(RUN) $(APP)::data --mode full --gen gen1 --n-prompts 11000 --title-calls 60
 	$(RUN) $(APP)::data --mode full --gen gen2 --n-prompts 5500 --title-calls 30
