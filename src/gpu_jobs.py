@@ -1,16 +1,20 @@
 """Container images and functions for every cloud GPU/CPU job in the project.
+
 Run from the repo root with the project venv, choosing the account explicitly:
 
     make gpu JOB=smoke
     make gpu JOB=bakeoff
     make gpu JOB="data --mode probe"
     ...
+
 Every GPU function has an explicit ``timeout`` and explicit CPU/memory (billed on top of the
 GPU, see docs/BUDGET.md). Every local entrypoint writes an estimate to the cost ledger and
 passes the per-account kill-threshold guard *before* launching, then records the measured
 wall-clock *after* (``kitsune.cost``).
 """
+
 from __future__ import annotations
+
 import gzip
 import json
 import os
@@ -19,16 +23,20 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
+
 import modal
 from kitsune import cost, versions
+
 APP_NAME = "kitsune"
 app = modal.App(APP_NAME)
+
 MODELS_DIR = "/models"  # HF cache for pre-downloaded weights
 DATA_DIR = "/data"  # datasets, generations, checkpoints, eval outputs
 models_vol = modal.Volume.from_name("kitsune-models", create_if_missing=True)
 data_vol = modal.Volume.from_name("kitsune-data", create_if_missing=True)
 VOLS = {MODELS_DIR: models_vol, DATA_DIR: data_vol}
 wandb_secret = modal.Secret.from_name("wandb")
+
 _ENV = {
     "HF_HOME": MODELS_DIR,
     "TOKENIZERS_PARALLELISM": "false",
@@ -41,6 +49,7 @@ _ENV = {
     "VLLM_USE_FLASHINFER_MOE_FP16": "0",
     "VLLM_USE_DEEP_GEMM": "0",
 }
+
 cpu_image = (
     modal.Image.debian_slim(python_version=versions.PYTHON_VERSION)
     .uv_pip_install(
@@ -66,6 +75,7 @@ gpu_base = (
     .env(_ENV)
 )
 gpu_image = gpu_base.add_local_python_source("kitsune")
+
 MODEL_IDS: dict[str, tuple[str, str]] = {
     "base": (versions.BASE_MODEL, versions.BASE_REVISION),
     "alt": (versions.ALT_BASE_MODEL, versions.ALT_BASE_REVISION),
@@ -74,10 +84,18 @@ MODEL_IDS: dict[str, tuple[str, str]] = {
     "judge": (versions.JUDGE_MODEL, versions.JUDGE_REVISION),
 }
 
+
 # =========================================================================== local helpers
 
+
 def _git_commit() -> str:
-    raise NotImplementedError
+    import subprocess
+
+    try:
+        return subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+    except Exception:
+        return "unknown"
+
 
 @contextmanager
 def ledger(
@@ -101,11 +119,13 @@ def ledger(
         acct_total = cost.spent(cost.read_ledger(), c.account)
         print(f"[budget] {job}: measured ${c.actual_usd:.3f}; {c.account} total ${acct_total:.2f}")
 
+
 def _upload(files: dict[str, str]) -> None:
     """Upload local files to the data Volume: {local_path: remote_path}."""
     with data_vol.batch_upload(force=True) as batch:
         for local, remote in files.items():
             batch.put_file(local, remote)
+
 
 def _download(remote: str, local: str) -> None:
     Path(local).parent.mkdir(parents=True, exist_ok=True)
@@ -113,11 +133,14 @@ def _download(remote: str, local: str) -> None:
         for chunk in data_vol.read_file(remote):
             f.write(chunk)
 
+
 def _save_json(path: str, obj: Any) -> None:
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     Path(path).write_text(json.dumps(obj, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
 
+
 # =========================================================================== container helpers
+
 
 def _write_jsonl_gz(path: str, rows: list[dict]) -> None:
     Path(path).parent.mkdir(parents=True, exist_ok=True)
@@ -125,12 +148,15 @@ def _write_jsonl_gz(path: str, rows: list[dict]) -> None:
         for r in rows:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
 
+
 def _read_jsonl_any(path: str) -> list[dict]:
     op = gzip.open if path.endswith(".gz") else open
     with op(path, "rt", encoding="utf-8") as f:  # type: ignore[operator]
         return [json.loads(x) for x in f if x.strip()]
 
+
 # =========================================================================== Phase 2: hello + weights
+
 
 @app.function(
     scaledown_window=2, image=cpu_image, gpu="T4", cpu=1, memory=1024, timeout=300, secrets=[wandb_secret]
@@ -161,10 +187,12 @@ def hello_gpu(git_commit: str, cumulative_usd: float) -> dict:
     run.finish()
     return {"nvidia_smi": smi, "wandb_url": url}
 
+
 @app.local_entrypoint()
 def hello() -> None:
     with ledger("2", "phase2-hello-gpu", "T4", 0.05, 1, 1, notes="GPU + W&B + secret check"):
         print(hello_gpu.remote(_git_commit(), cost.spent(cost.read_ledger())))
+
 
 @app.function(
     scaledown_window=2, image=cpu_image, cpu=4, memory=8192, timeout=3600, volumes={MODELS_DIR: models_vol}
@@ -179,15 +207,18 @@ def download_weights(repo_id: str, revision: str) -> dict:
     size = sum(f.stat().st_size for f in Path(path).rglob("*") if f.is_file())
     return {"repo": repo_id, "gb": round(size / 1e9, 2), "minutes": round((time.time() - t0) / 60, 1)}
 
+
 def _ensure_weights(which: str) -> None:
     for w in which.split(","):
         repo, rev = MODEL_IDS[w]
         with ledger("infra", f"download-{w}", "CPU", 0.3, 4, 8, notes=repo):
             print(download_weights.remote(repo, rev))
 
+
 @app.local_entrypoint()
 def download(which: str = "base") -> None:
-    raise NotImplementedError
+    _ensure_weights(which)
+
 
 @app.function(
     scaledown_window=2, image=cpu_image, cpu=1, memory=1024, timeout=600, volumes={MODELS_DIR: models_vol}
@@ -203,12 +234,15 @@ def delete_weights(repo_id: str) -> str:
         return f"deleted {d}"
     return f"not present: {d}"
 
+
 @app.local_entrypoint()
 def purge(which: str) -> None:
     for w in which.split(","):
         print(delete_weights.remote(MODEL_IDS[w][0]))
 
+
 # =========================================================================== Phase 2: smoke + bake-off
+
 
 @app.function(scaledown_window=2, image=gpu_image, gpu="L4", cpu=4, memory=65536, timeout=2400, volumes=VOLS)
 def smoke_hf() -> dict:
@@ -218,6 +252,7 @@ def smoke_hf() -> dict:
     data_vol.commit()
     return res
 
+
 @app.function(scaledown_window=2, image=gpu_image, gpu="L4", cpu=4, memory=32768, timeout=1500, volumes=VOLS)
 def smoke_vllm(use_adapter: bool) -> dict:
     from kitsune.smoke import _guard, check_vllm
@@ -225,6 +260,7 @@ def smoke_vllm(use_adapter: bool) -> dict:
     data_vol.reload()
     adapter = f"{DATA_DIR}/smoke/smoke-train/adapter" if use_adapter else None
     return _guard("vllm", check_vllm, versions.BASE_MODEL, versions.BASE_REVISION, adapter)
+
 
 @app.local_entrypoint()
 def smoke() -> None:
@@ -248,6 +284,7 @@ def smoke() -> None:
     )
     print(json.dumps({k: v for k, v in vl.items() if k != "trace"}, ensure_ascii=False, indent=1)[:3000])
 
+
 @app.function(scaledown_window=2, image=gpu_image, gpu="L4", cpu=4, memory=65536, timeout=1800, volumes=VOLS)
 def smoke_merge() -> dict:
     """Re-run only the merge check on the smoke adapter (fp32 merge + KL/top-1 metrics)."""
@@ -266,6 +303,7 @@ def smoke_merge() -> dict:
     )
     data_vol.commit()
     return res
+
 
 @app.local_entrypoint()
 def smoke_rerun(parts: str = "vllm,merge") -> None:
@@ -286,7 +324,9 @@ def smoke_rerun(parts: str = "vllm,merge") -> None:
         )
     print(json.dumps({kk: vv for kk, vv in rep["hf"]["merge"].items() if kk != "trace"}, indent=1)[:2000])
 
+
 BAKEOFF_GPU = {"base": "L4", "alt": "L4"}
+
 
 @app.function(scaledown_window=2, image=gpu_image, gpu="L4", cpu=4, memory=32768, timeout=1800, volumes=VOLS)
 def bakeoff_generate(model_key: str, prompts: list[dict]) -> list[dict]:
@@ -315,6 +355,7 @@ def bakeoff_generate(model_key: str, prompts: list[dict]) -> list[dict]:
     for o, p in zip(out, prompts, strict=True):
         o.update({"system": model_key, "prompt": p, "gen_seconds_total": dt, "load_kwargs": eng.load_kwargs})
     return out
+
 
 @app.local_entrypoint()
 def bakeoff() -> None:
@@ -345,7 +386,9 @@ def bakeoff() -> None:
     _save_json("reports/bakeoff/summary.json", summary)
     print(json.dumps(summary, ensure_ascii=False, indent=1))
 
+
 # =========================================================================== Phase 3: data
+
 
 @app.function(
     scaledown_window=2,
@@ -512,6 +555,7 @@ def data_run(gen_key: str, mode: str, cfg: dict) -> dict:
     data_vol.commit()
     return stats
 
+
 @app.local_entrypoint()
 def data(
     mode: str = "probe",
@@ -565,6 +609,7 @@ def data(
     _pull(mode)
     print(json.dumps(stats, ensure_ascii=False, indent=1))
 
+
 def _pull(mode: str) -> None:
     n = 0
     for e in data_vol.listdir(f"/raw/{mode}"):
@@ -573,10 +618,12 @@ def _pull(mode: str) -> None:
         n += 1
     print(f"pulled {n} files into data/raw/{mode}/")
 
+
 @app.local_entrypoint()
 def data_pull(mode: str = "full") -> None:
     """Copy raw generations/labels for ``mode`` from the Volume into data/raw/<mode>/."""
     _pull(mode)
+
 
 @app.local_entrypoint()
 def data_push(lang: str = "ja") -> None:
@@ -585,7 +632,9 @@ def data_push(lang: str = "ja") -> None:
     _upload({f"data/{d}/train.jsonl": f"/{d}/train.jsonl", f"data/{d}/val.jsonl": f"/{d}/val.jsonl"})
     print(f"uploaded data/{d}/{{train,val}}.jsonl")
 
+
 # =========================================================================== Phases 4-5: training
+
 
 @app.function(
     scaledown_window=2,
@@ -615,6 +664,7 @@ def train_fn(
         git_commit,
         commit_fn=data_vol.commit,
     )
+
 
 @app.local_entrypoint()
 def train(config: str, name: str, est_hours: float = 0.5, planned_remaining: float = 0.0) -> None:
@@ -646,6 +696,7 @@ def train(config: str, name: str, est_hours: float = 0.5, planned_remaining: flo
     _save_json(f"reports/train/{name}.json", summary)
     print(json.dumps(summary, ensure_ascii=False, indent=1))
 
+
 @app.function(scaledown_window=2, image=gpu_image, gpu="L4", cpu=4, memory=65536, timeout=3600, volumes=VOLS)
 def merge_fn(
     adapter_run: str, base_model: str = versions.BASE_MODEL, base_revision: str = versions.BASE_REVISION
@@ -662,7 +713,20 @@ def merge_fn(
     data_vol.commit()
     return rep
 
+
+@app.local_entrypoint()
+def merge(adapter: str) -> None:
+    if Path(f"reports/merge_check_{adapter}.json").exists():
+        print(f"[merge] {adapter}: already merged and verified, skipping")
+        return
+    with ledger("7", f"merge-{adapter}", "L4", 0.3, 4, 64):
+        rep = merge_fn.remote(adapter)
+    _save_json(f"reports/merge_check_{adapter}.json", rep)
+    print(json.dumps(rep, indent=1))
+
+
 # =========================================================================== Phase 6: evaluation
+
 
 @app.function(
     scaledown_window=2, image=gpu_image, gpu="L4", cpu=4, memory=32768, timeout=3 * 3600, volumes=VOLS
@@ -767,6 +831,7 @@ def eval_generate_fn(
         "load_kwargs": eng.load_kwargs,
     }
 
+
 @app.local_entrypoint()
 def eval_generate(systems: str, gpu: str = "L4", est_hours: float = 0.3) -> None:
     """Generate eval suites for the named systems (comma-separated keys of configs/eval.yaml)."""
@@ -808,7 +873,88 @@ def eval_generate(systems: str, gpu: str = "L4", est_hours: float = 0.3) -> None
         _download(f"/eval/generations{sfx}/{system}.jsonl.gz", local)
         print(info)
 
+
 # =========================================================================== Phase 6: judge, perplexity, regression
+
+# The japanese_leaderboard tasks load JGLUE through a dataset *script* (JGLUE.py); `datasets` removed script support in
+# 4.0, so this image alone pins the last 3.x release and allows the script.
+lmeval_image = (
+    gpu_base.uv_pip_install(
+        "emoji==2.14.0",
+        "neologdn==0.5.6",
+        "fugashi[unidic-lite]==1.5.2",
+        "rouge_score==0.1.2",
+        "datasets==3.6.0",
+    )
+    .env({"HF_DATASETS_TRUST_REMOTE_CODE": "1"})
+    .add_local_python_source("kitsune")
+)
+
+
+@app.function(scaledown_window=2, image=lmeval_image, cpu=2, memory=4096, timeout=1200)
+def lmeval_check_fn(tasks: list[str]) -> dict:
+    """CPU-only check that every lm-eval task's dataset loads (no model), before paying for a GPU run."""
+    from lm_eval.tasks import TaskManager, get_task_dict
+
+    d = get_task_dict(tasks, TaskManager())
+    return {t: len(list(obj.eval_docs)) for t, obj in d.items()}
+
+
+@app.local_entrypoint()
+def lm_eval_check() -> None:
+    import yaml
+
+    tasks = yaml.safe_load(Path("configs/eval.yaml").read_text(encoding="utf-8"))["lm_eval"]["tasks"]
+    with ledger("6", "lmeval-dataset-check", "CPU", 0.1, 2, 4):
+        print(lmeval_check_fn.remote(tasks))
+
+
+@app.function(
+    scaledown_window=2, image=gpu_image, gpu="H100", cpu=8, memory=65536, timeout=4 * 3600, volumes=VOLS
+)
+def judge_fn(
+    model_key: str,
+    jobs: list[dict],
+    max_model_len: int = 12288,
+    engine_kwargs: dict | None = None,
+    lang: str = "ja",
+) -> list[dict]:
+    """Run judge jobs (dicts of GenJob fields) with a judge model; returns raw texts + parsed verdicts."""
+    from kitsune.data.generate import ChatEngine, GenJob
+    from kitsune.en import parse_verdict_en
+    from kitsune.eval.judge import parse_verdict as parse_verdict_ja
+
+    parse_verdict = parse_verdict_en if lang == "en" else parse_verdict_ja
+
+    model, rev = MODEL_IDS[model_key]
+    is_eval_judge = model_key == "judge"
+    kw = {"trust_remote_code": is_eval_judge, **(engine_kwargs or {})}
+    eng = ChatEngine(
+        model,
+        rev,
+        max_model_len=max_model_len,
+        gpu_memory_utilization=0.92,
+        chat_template_kwargs={} if is_eval_judge else {"enable_thinking": False},
+        text_only=not is_eval_judge,
+        **kw,
+    )
+    gj = [GenJob(**j) for j in jobs]
+    res = eng.chat(gj, seed=0)
+    out = []
+    for j, r in zip(gj, res, strict=True):
+        out.append(
+            {
+                "id": j.id,
+                **j.meta,
+                "verdict": parse_verdict(r["text"]),
+                "raw": r["text"][-4000:],
+                "finish_reason": r["finish_reason"],
+                "n_tokens": r["n_tokens"],
+            }
+        )
+    return out
+
+
 @app.local_entrypoint()
 def eval_judge(
     comparisons: str = "kitsune:base,kitsune:kitsune-sft,kitsune:teacher",
@@ -823,7 +969,6 @@ def eval_judge(
 
     ``excerpt`` (e.g. "kitsune-sft:base") adds length-matched comparisons of 600-character short-story openings.
     """
-    print("[debug] eval_judge", flush=True)
     from kitsune.eval.judge_plan import comparison_jobs, excerpt_jobs, validation_jobs
     from kitsune.schema import read_jsonl, write_jsonl
 
@@ -851,6 +996,7 @@ def eval_judge(
     for f, rows in by_file.items():
         write_jsonl(f, rows)
         print(f, len(rows), "invalid:", sum(r["verdict"] is None for r in rows))
+
 
 @app.local_entrypoint()
 def eval_judge_en(
@@ -894,6 +1040,7 @@ def eval_judge_en(
         write_jsonl(f, rows)
         print(f, len(rows), "invalid:", sum(r["verdict"] is None for r in rows))
 
+
 @app.function(scaledown_window=2, image=gpu_image, gpu="L4", cpu=4, memory=32768, timeout=3600, volumes=VOLS)
 def ppl_fn(models: dict[str, str], max_length: int = 2048, lang: str = "ja") -> dict:
     """Assistant-token perplexity on the validation split, with the same tokenization as training."""
@@ -931,16 +1078,35 @@ def ppl_fn(models: dict[str, str], max_length: int = 2048, lang: str = "ja") -> 
         torch.cuda.empty_cache()
     return out
 
+
 def _release(lang: str) -> dict:
     import yaml
 
     return yaml.safe_load(Path("configs/release.yaml").read_text(encoding="utf-8"))[lang]
+
 
 def _system_path(ecfg: dict, s: str) -> tuple[str, str | None]:
     sc = ecfg["systems"][s]
     if sc.get("merged"):
         return f"{DATA_DIR}/merged/{sc['merged']}", None
     return sc["model"], sc.get("revision")
+
+
+@app.local_entrypoint()
+def eval_ppl(systems: str = "base,kitsune-sft,kitsune") -> None:
+    import yaml
+
+    ecfg = yaml.safe_load(Path("configs/eval.yaml").read_text(encoding="utf-8"))
+    models = {s: _system_path(ecfg, s)[0] for s in systems.split(",")}
+    langs = {ecfg["systems"][s].get("lang", "ja") for s in systems.split(",")}
+    if len(langs) != 1:
+        raise SystemExit(f"eval_ppl: mixed languages in {systems}")
+    lang = langs.pop()
+    with ledger("6", f"eval-ppl{'-en' if lang == 'en' else ''}", "L4", 0.3, 4, 32):
+        res = ppl_fn.remote(models, 2048, lang)
+    _save_json(f"reports/{'ppl_en' if lang == 'en' else 'ppl'}.json", res)
+    print(res)
+
 
 @app.function(
     scaledown_window=2, image=lmeval_image, gpu="L40S", cpu=4, memory=32768, timeout=3 * 3600, volumes=VOLS
@@ -969,14 +1135,41 @@ def lm_eval_fn(path: str, revision: str | None, tasks: list[str], limit: int) ->
     }
     return json.loads(json.dumps(keep, default=str))
 
+
+@app.local_entrypoint()
+def lm_eval(systems: str = "base,kitsune", limit: int = 500, est_hours: float = 0.4) -> None:
+    """Japanese regression suite: multiple-choice tasks from lm-eval 0.4.13's japanese_leaderboard."""
+    import yaml
+
+    ecfg = yaml.safe_load(Path("configs/eval.yaml").read_text(encoding="utf-8"))
+    tasks = ecfg["lm_eval"]["tasks"]
+    summary = {}
+    # The regression check runs on the base model and the *released* Japanese model (configs/release.yaml, D-029).
+    rel = _release("ja")["system"]
+    wanted = [rel if s == "kitsune" else s for s in systems.split(",")]
+    if wanted != systems.split(","):
+        print(f"[lm_eval] released Japanese model is {rel!r}; evaluating {wanted}")
+    for s in wanted:
+        path, rev = _system_path(ecfg, s)
+        with ledger("6", f"lmeval-{s}", "L40S", est_hours, 4, 32, notes=",".join(tasks)):
+            r = lm_eval_fn.remote(path, rev, tasks, limit)
+        _save_json(f"reports/lm_eval/{s}.json", r)
+        summary[s] = {
+            t: {k: v for k, v in m.items() if k.startswith(("acc", "exact", "f1"))}
+            for t, m in r["results"].items()
+        }
+    _save_json("reports/lm_eval_summary.json", summary)
+    print(json.dumps(summary, indent=1))
+
+
 # =========================================================================== Phase 5b: DPO
+
 
 @app.function(
     scaledown_window=2, image=gpu_image, gpu="L40S", cpu=4, memory=32768, timeout=2 * 3600, volumes=VOLS
 )
 def dpo_sample_fn(merged_sft: str, n_prompts: int, seed: int = 0, lang: str = "ja") -> dict:
     """Two samples per training prompt from the SFT model, for DPO pair construction."""
-    print("[debug] dpo_sample_fn", flush=True)
     import random as _r
 
     from kitsune.data.generate import ChatEngine, GenJob
@@ -1026,6 +1219,45 @@ def dpo_sample_fn(merged_sft: str, n_prompts: int, seed: int = 0, lang: str = "j
     _write_jsonl_gz(f"{DATA_DIR}/{'dpo_en' if en else 'dpo'}/samples.jsonl.gz", rows)
     data_vol.commit()
     return {"n": len(rows)}
+
+
+@app.function(
+    scaledown_window=2,
+    image=gpu_image,
+    gpu="H100",
+    cpu=8,
+    memory=49152,
+    timeout=6 * 3600,
+    volumes=VOLS,
+    secrets=[wandb_secret],
+)
+def dpo_train_fn(
+    cfg: dict,
+    sft_run: str,
+    run_name: str,
+    gpu: str,
+    prior_spend: float,
+    git_commit: str,
+    pairs_dir: str = "dpo",
+) -> dict:
+    from kitsune.train.dpo import train_dpo
+
+    os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+    data_vol.reload()
+    return train_dpo(
+        cfg,
+        f"{DATA_DIR}/{pairs_dir}/pairs.jsonl",
+        f"{DATA_DIR}/runs/{sft_run}/adapter",
+        f"{DATA_DIR}/runs",
+        run_name,
+        gpu,
+        cfg.get("cpu", 8),
+        cfg.get("memory_gib", 48),
+        prior_spend,
+        git_commit,
+        commit_fn=data_vol.commit,
+    )
+
 
 @app.local_entrypoint()
 def dpo(
@@ -1106,6 +1338,7 @@ def dpo(
     verdicts: dict[str, dict] = {}
     for r in read_jsonl(verdicts_p):
         verdicts.setdefault(r["pair_id"], {})[r["order"]] = r["verdict"]
+    # D-029: refusal-preference pairs for the training disallowed prompts (Japanese v2 was trained without them).
     pairs, counts = build_pairs(samples, verdicts, lang, safety=safety_pairs and d != "dpo_v2")
     write_jsonl(pairs_p, pairs)
     _save_json(f"reports/{d.replace('dpo', 'dpo_pairs', 1)}.json", counts)
@@ -1125,10 +1358,155 @@ def dpo(
     _save_json(f"reports/train/{name}.json", summary)
     print(summary)
 
+
+# =========================================================================== Phase 7: GGUF export (CPU only)
+
+gguf_image = (
+    modal.Image.debian_slim(python_version=versions.PYTHON_VERSION)
+    .apt_install("git", "build-essential", "cmake")
+    .run_commands(
+        "git clone https://github.com/ggml-org/llama.cpp /llama.cpp",
+        f"cd /llama.cpp && git checkout {versions.LLAMA_CPP_COMMIT}",
+        "cd /llama.cpp && pip install -r requirements/requirements-convert_hf_to_gguf.txt",
+        "cd /llama.cpp && cmake -B build -DGGML_NATIVE=OFF -DLLAMA_CURL=OFF && cmake --build build -j 8 --target llama-quantize llama-cli",
+    )
+    .env(_ENV)
+    .add_local_python_source("kitsune")
+)
+
+
+@app.function(scaledown_window=2, image=gguf_image, cpu=8, memory=32768, timeout=2 * 3600, volumes=VOLS)
+def gguf_fn(merged_run: str, quants: list[str], lang: str = "ja") -> dict:
+    """Convert merged weights to GGUF (f16 → quantized) and smoke-generate from the smallest quant."""
+    import hashlib
+    import subprocess
+
+    data_vol.reload()
+    # llama.cpp's converter pins an older transformers, which cannot read the list-form "extra_special_tokens"
+    # (["<|video|>"]) written by transformers 5. Convert from a view of the merged folder: symlinks to every file,
+    # plus a tokenizer_config.json without that field (a vision token, irrelevant for text).
+    merged_dir = Path(f"{DATA_DIR}/merged/{merged_run}")
+    view = Path(f"/tmp/gguf_src/{merged_run}")
+    view.mkdir(parents=True, exist_ok=True)
+    for f in merged_dir.iterdir():
+        dst = view / f.name
+        if dst.exists() or dst.is_symlink():
+            continue
+        if f.name == "tokenizer_config.json":
+            tcfg = json.loads(f.read_text(encoding="utf-8"))
+            if isinstance(tcfg.get("extra_special_tokens"), list):
+                tcfg.pop("extra_special_tokens")
+            dst.write_text(json.dumps(tcfg, ensure_ascii=False, indent=2), encoding="utf-8")
+        else:
+            dst.symlink_to(f)
+    src = str(view)
+    out = Path(f"{DATA_DIR}/gguf/{merged_run}")
+    out.mkdir(parents=True, exist_ok=True)
+    name = versions.model_slug(lang)
+    f16 = out / f"{name}-F16.gguf"
+    subprocess.run(
+        ["python", "/llama.cpp/convert_hf_to_gguf.py", src, "--outtype", "f16", "--outfile", str(f16)],
+        check=True,
+    )
+    files = {}
+    for q in quants:
+        dst = out / f"{name}-{q}.gguf"
+        subprocess.run(["/llama.cpp/build/bin/llama-quantize", str(f16), str(dst), q], check=True)
+        h = hashlib.sha256(dst.read_bytes()).hexdigest()
+        files[dst.name] = {"bytes": dst.stat().st_size, "sha256": h}
+    f16.unlink()
+    from kitsune.en import SYSTEM_PROMPT_EN, build_user_prompt_en
+    from kitsune.prompts import SYSTEM_PROMPT
+
+    system = SYSTEM_PROMPT_EN if lang == "en" else SYSTEM_PROMPT
+    if lang == "en":
+        user = build_user_prompt_en(["魔法少女"], "Magical Girl Lumina Is Late Again Today", "あらすじ")
+    else:
+        user = "ジャンル: 魔法少女\nタイトル: 魔法少女ルミナは今日も遅刻する\n形式: あらすじ"
+    # Gemma 4 non-thinking prompt without <bos> (llama.cpp adds it); same string as demo/app.py:chat_prompt.
+    prompt = f"<|turn>system\n{system}<turn|>\n<|turn>user\n{user}<turn|>\n<|turn>model\n"
+    smallest = out / f"{name}-{quants[0]}.gguf"
+    r = subprocess.run(
+        [
+            "/llama.cpp/build/bin/llama-cli",
+            "-m",
+            str(smallest),
+            "-p",
+            prompt,
+            "-n",
+            "96",
+            "--temp",
+            "0",
+            "-st",  # single turn; this llama.cpp version removed -no-cnv (checked by gguf_smoke)
+        ],
+        capture_output=True,
+        text=True,
+        errors="replace",  # a token cap can split a multibyte character
+        timeout=900,
+        check=False,
+    )
+    data_vol.commit()
+    return {
+        "files": files,
+        "smoke_sample": r.stdout[-800:],
+        "smoke_rc": r.returncode,
+        "llama_cpp_commit": versions.LLAMA_CPP_COMMIT,
+    }
+
+
+@app.local_entrypoint()
+def gguf(merged: str = "dpo-main", quants: str = "Q4_K_M,Q8_0", lang: str = "ja") -> None:
+    rel = _release(lang)["merged"]  # the GGUF is always the released model (configs/release.yaml, D-029)
+    if rel != merged:
+        print(f"[gguf] released {lang} model is {rel!r}; exporting it instead of {merged!r}")
+        merged = rel
+    if Path(f"reports/gguf_{merged}.json").exists():
+        print(f"[gguf] {merged}: already exported (reports/gguf_{merged}.json), skipping")
+        return
+    with ledger("7", f"gguf-{merged}", "CPU", 0.6, 8, 32, notes=quants):
+        res = gguf_fn.remote(merged, quants.split(","), lang)
+    _save_json(f"reports/gguf_{merged}.json", res)
+    print(json.dumps(res, ensure_ascii=False, indent=1))
+
+
 @app.function(scaledown_window=2, image=gguf_image, cpu=8, memory=16384, timeout=1800, volumes=VOLS)
 def gguf_smoke_fn(merged_run: str, quant: str, lang: str) -> dict:
     """Re-run the llama.cpp smoke generation on an existing GGUF, capturing stderr (no re-conversion)."""
-    raise NotImplementedError
+    import subprocess
+
+    from kitsune.en import SYSTEM_PROMPT_EN, build_user_prompt_en
+    from kitsune.prompts import SYSTEM_PROMPT
+
+    data_vol.reload()
+    name = versions.model_slug(lang)
+    path = f"{DATA_DIR}/gguf/{merged_run}/{name}-{quant}.gguf"
+    system = SYSTEM_PROMPT_EN if lang == "en" else SYSTEM_PROMPT
+    user = (
+        build_user_prompt_en(["魔法少女"], "Magical Girl Lumina Is Late Again Today", "あらすじ")
+        if lang == "en"
+        else "ジャンル: 魔法少女\nタイトル: 魔法少女ルミナは今日も遅刻する\n形式: あらすじ"
+    )
+    prompt = f"<|turn>system\n{system}<turn|>\n<|turn>user\n{user}<turn|>\n<|turn>model\n"
+    bins = sorted(p.name for p in Path("/llama.cpp/build/bin").iterdir())
+    out = {"bins": bins}
+    for label, args in (
+        ("cli_no_cnv", ["/llama.cpp/build/bin/llama-cli", "-m", path, "-p", prompt, "-n", "96", "--temp", "0", "-no-cnv", "--no-display-prompt"]),
+        ("cli_single_turn", ["/llama.cpp/build/bin/llama-cli", "-m", path, "-p", prompt, "-n", "96", "--temp", "0", "-st"]),
+    ):  # fmt: skip
+        r = subprocess.run(args, capture_output=True, text=True, errors="replace", timeout=900, check=False)
+        out[label] = {"rc": r.returncode, "stdout": r.stdout[-800:], "stderr": r.stderr[-1500:]}
+        if r.returncode == 0 and r.stdout.strip():
+            break
+    return out
+
+
+@app.local_entrypoint()
+def gguf_smoke(merged: str, quant: str = "Q4_K_M", lang: str = "ja") -> None:
+    with ledger("7", f"gguf-smoke-{merged}", "CPU", 0.2, 8, 16):
+        res = gguf_smoke_fn.remote(merged, quant, lang)
+    _save_json(f"reports/gguf_smoke_{merged}.json", res)
+    print(json.dumps(res, ensure_ascii=False, indent=1)[:4000])
+
 
 @app.local_entrypoint()
 def judge_smoke(judge: str = "judge") -> None:
@@ -1192,3 +1570,53 @@ def judge_smoke(judge: str = "judge") -> None:
     }
     _save_json("reports/judge_smoke.json", out)
     print(json.dumps({k: v for k, v in out.items() if k != "raw_examples"}, ensure_ascii=False, indent=1))
+
+
+@app.function(
+    scaledown_window=2, image=gpu_image, gpu="H100", cpu=8, memory=40960, timeout=1800, volumes=VOLS
+)
+def test_passage_topup_fn(prompt_ids: list[str], candidates: int, seed: int) -> int:
+    """Extra source-story candidates for held-out 続き prompts whose earlier candidates all failed the filters."""
+    import random as _r
+
+    from kitsune.data.generate import ChatEngine, story_job
+    from kitsune.data.seeds import SeedPrompt
+
+    data_vol.reload()
+    test = {p["id"]: p for p in _read_jsonl_any(f"{DATA_DIR}/frozen/test_prompts.jsonl")}
+    rng = _r.Random(seed)
+    jobs = []
+    for pid in prompt_ids:
+        p = test[pid]
+        for k in range(candidates):
+            j = story_job(SeedPrompt(p["id"], p["genres"], p["title"], "続き"), rng, kind="test_passage")
+            j.id = f"{pid}:test_passage:topup{seed}-{k}"
+            jobs.append(j)
+    model, rev = MODEL_IDS["gen1"]
+    eng = ChatEngine(model, rev, max_model_len=4096, gpu_memory_utilization=0.92)
+    res = eng.chat(jobs, seed=seed)
+    rows = [
+        {
+            **r,
+            "kind": "test_passage",
+            "generator": f"{model}@{rev[:12]}",
+            "gen_key": "gen1",
+            "sampling": j.sampling,
+            "meta": j.meta,
+        }
+        for j, r in zip(jobs, res, strict=True)
+    ]
+    _write_jsonl_gz(f"{DATA_DIR}/raw/full/test_passages_topup{seed}.jsonl.gz", rows)
+    data_vol.commit()
+    return len(rows)
+
+
+@app.local_entrypoint()
+def test_passage_topup(ids: str, candidates: int = 4, seed: int = 77) -> None:
+    _upload({"data/test_prompts.jsonl": "/frozen/test_prompts.jsonl"})
+    _ensure_weights("gen1")
+    with ledger("3", "test-passage-topup", "H100", 0.12, 8, 40, notes=ids):
+        print(test_passage_topup_fn.remote(ids.split(","), candidates, seed))
+    _download(
+        f"/raw/full/test_passages_topup{seed}.jsonl.gz", f"data/raw/full/test_passages_topup{seed}.jsonl.gz"
+    )

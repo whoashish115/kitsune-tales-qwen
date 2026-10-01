@@ -1,7 +1,7 @@
 ---
 theme: default
 title: Kitsune Tales
-info: Fantasy light-novel fine-tunes of Gemma 4 E4B in Japanese and English. Every number comes from reports/ in the main repository.
+info: Two small open models that write fantasy light-novel stories in Japanese and English. Every number comes from reports/ in the main repository.
 author: Ashish Kumar
 colorSchema: light
 routerMode: hash
@@ -23,47 +23,59 @@ class: text-center
 
 # Kitsune Tales
 
-Fantasy light-novel fine-tunes of Gemma 4 E4B in Japanese and English
+Fantasy light-novel stories from a small open model, in Japanese and English
 
 <div class="mt-10 text-sm">Ashish Kumar</div>
-<div class="kicker mt-1">Technical report v0.1 · September 2026</div>
+<div class="kicker mt-1">v0.1 · September 2026</div>
 
 ---
 
 <p class="section">Overview</p>
 
-# Abstract
+# Project overview
 
-We fine-tune Gemma 4 E4B (4.6B effective parameters) with LoRA to write original, general-audience fantasy fiction from a request that names genres, a title and a format, in Japanese and in English. All training data is synthetic: written by two Apache-2.0 models and filtered by rules and cross-model labels.
+Two small open models that write original fantasy light-novel stories. You give a genre, a title and a format; the model writes the story.
 
-On 270 held-out prompts per language, length adherence rises from **0.4 % to 50 %** (Japanese) and from **22 % to 81 %** (English), and policy violations fall from **85 % to 5 %** and from **79 % to 0 %**. A validated LLM judge prefers the base model on full outputs, but the preference disappears when both outputs are cut to the same length.
+<div class="grid grid-cols-2 gap-4 mt-4 text-sm">
+<div class="box p-4">
 
-The full study, including data generation, cost **$41.34** of cloud GPU time.
+### Models
+`kitsune-tales-e4b-jp` (Japanese) and `kitsune-tales-e4b-en` (English with Japanese anime themes)
+
+</div>
+<div class="box p-4">
+
+### Base model
+Gemma 4 E4B, 4.6B effective parameters; LoRA trains 77.8M of them
+
+</div>
+<div class="box p-4">
+
+### Data
+16,737 training examples, almost all synthetic stories from two larger open models
+
+</div>
+<div class="box p-4">
+
+### Cost
+$41.34 of cloud GPU time, data generation included
+
+</div>
+</div>
 
 ---
 
 <p class="section">Overview</p>
 
-# Contributions
-
-1. **Two open models.** `kitsune-tales-e4b-jp` (SFT) and `kitsune-tales-e4b-en` (SFT + DPO), released as merged weights, LoRA adapters and GGUF files
-2. **A synthetic-data pipeline.** Two generators, cross-model labelling, rule filters and deduplication; both datasets are released
-3. **An evaluation protocol.** Test prompts frozen before data generation, bootstrap confidence intervals, an LLM judge validated on known answers, and a length-matched comparison
-4. **A finding about the judge.** Its preference for the base model is explained mostly by output length, not by prose quality
-
----
-
-<p class="section">Introduction</p>
-
-# Motivation
+# Why this project
 
 - Open creative-writing models are either large and costly to run, or general-purpose and weak on a genre's conventions
-- Light-novel fantasy is a large genre with strong conventions: isekai and villainess plots, long descriptive titles, dialogue-heavy prose
-- A small, specialised model that runs on a laptop is therefore a well-posed target
+- Light-novel fantasy has strong conventions: isekai and villainess plots, long descriptive titles, dialogue-heavy prose
+- A small model that knows one genre well can run on a laptop
 
 <div class="box mt-10 p-5">
 
-**Research question.** How close can a 4B-effective model get to its 35B teacher on this task, on an individual's budget, under honest measurement?
+**Goal.** Get a 4B-effective model as close as possible to its 35B teacher on this genre, on a small budget, and measure the result properly.
 
 </div>
 
@@ -71,11 +83,11 @@ The full study, including data generation, cost **$41.34** of cloud GPU time.
 layout: two-cols
 ---
 
-<p class="section">Introduction</p>
+<p class="section">Overview</p>
 
-# Task definition
+# What the model does
 
-A request names **one to three genres**, a **title** and a **format**. The response is prose only: no headings, markdown or commentary.
+A request names **one to three genres**, a **title** and a **format**. The answer is the story only: no headings, markdown or commentary.
 
 | Format | Japanese | English |
 |---|---:|---:|
@@ -83,7 +95,7 @@ A request names **one to three genres**, a **title** and a **format**. The respo
 | Short story | 800–1,500 characters | 600–1,100 words |
 | Continuation | 400–800 characters | 300–600 words |
 
-<p class="cap">Table 1. Target length by format.</p>
+<p class="cap">Target length for each format.</p>
 
 ::right::
 
@@ -103,319 +115,230 @@ Format: continuation</div>
 
 ---
 
-<p class="section">Method</p>
+<p class="section">Overview</p>
 
-# Design principles
+# How it was built
 
-All four were fixed before any training data existed.
-
-<div class="grid grid-cols-2 gap-5 mt-6">
-<div class="box p-4">
-
-### Frozen test set
-270 prompts per language (9 genres × 3 formats × 10), hashed before data generation
-
+<div class="grid grid-cols-5 gap-3 mt-6">
+<div class="box p-3"><div class="kicker">1</div><div class="font-bold text-sm mb-1">Data</div><div class="text-xs leading-snug">Two open models write stories and check each other's; rules and deduplication clean them</div></div>
+<div class="box p-3"><div class="kicker">2</div><div class="font-bold text-sm mb-1">SFT</div><div class="text-xs leading-snug">LoRA fine-tuning teaches the format, the length and the refusals</div></div>
+<div class="box p-3"><div class="kicker">3</div><div class="font-bold text-sm mb-1">DPO</div><div class="text-xs leading-snug">Preference tuning on pairs of the model's own outputs</div></div>
+<div class="box p-3"><div class="kicker">4</div><div class="font-bold text-sm mb-1">Testing</div><div class="text-xs leading-snug">Held-out prompts, a safety suite and an LLM judge</div></div>
+<div class="box p-3"><div class="kicker">5</div><div class="font-bold text-sm mb-1">Release</div><div class="text-xs leading-snug">Merged weights, GGUF files for laptops, a demo and the datasets</div></div>
 </div>
-<div class="box p-4">
 
-### Pre-registered decisions
-The base-model switch rule and the release rule were written before the results they decide
+<div class="mt-8">
 
-</div>
-<div class="box p-4">
+Three rules held throughout:
 
-### Measured uncertainty
-95 % bootstrap confidence intervals; the LLM judge must pass a known-answer test before use
+- The 270 test prompts per language were frozen before any training data existed
+- Choices such as the base model and which model to release followed rules written down in advance
+- A budget check ran before every GPU job
 
-</div>
-<div class="box p-4">
-
-### Open and budgeted
-Apache-2.0 models, code and data; a budget guard checks every GPU job before launch
-
-</div>
 </div>
 
 ---
 
-<p class="section">Method</p>
+<p class="section">Build</p>
 
-# Base model selection
+# Choosing the base model
 
-Pre-registered rule: switch to Gemma 4 E4B if Qwen3.5-4B is clearly worse on script purity or coherence.
+A short zero-shot test decided between the two candidates: switch to Gemma 4 E4B if Qwen3.5-4B is clearly worse on script purity or coherence.
 
-| Metric | Qwen3.5-4B | Gemma 4 E4B |
+| 12 test prompts | Qwen3.5-4B | Gemma 4 E4B |
 |---|---:|---:|
 | Chinese words inside Japanese prose | 4 / 12 | **0 / 12** |
 | Repetitive outputs | 1 / 12 | **0 / 12** |
 | Fantasy-only outputs | 11 / 12 | **12 / 12** |
 | Genre-cue adherence | 0.86 | **0.93** |
 
-<p class="cap">Table 2. Zero-shot bake-off on 12 prompts disjoint from the test set.</p>
-
-Gemma 4 E4B: 7.52B stored parameters, **4.62B effective** (2.90B are per-layer embedding tables).
+Gemma 4 E4B stores 7.52B parameters but computes like a **4.62B** model, because 2.90B of them are per-layer embedding tables.
 
 ---
 
-<p class="section">Data</p>
+<p class="section">Build</p>
 
-# Data generation
+# Data
 
-No web fiction is used. Two Apache-2.0 models write the stories, and each labels the other's.
+No web fiction: Qwen3.6-35B-A3B and Gemma 4 26B-A4B write the stories and label each other's; rules and MinHash deduplication clean the rest.
 
-<div class="grid grid-cols-5 gap-3 my-4">
-<div class="box p-3"><div class="kicker">1</div><div class="font-bold text-sm mb-1">Seeds</div><div class="text-xs leading-snug">Titles, genre mixes and formats; titles close to a test title are dropped</div></div>
-<div class="box p-3"><div class="kicker">2</div><div class="font-bold text-sm mb-1">Generation</div><div class="text-xs leading-snug">Qwen3.6-35B-A3B and Gemma 4 26B-A4B write the stories</div></div>
-<div class="box p-3"><div class="kicker">3</div><div class="font-bold text-sm mb-1">Cross-labelling</div><div class="text-xs leading-snug">Each model rates the other's stories for fantasy, audience, real people or IP, and fit</div></div>
-<div class="box p-3"><div class="kicker">4</div><div class="font-bold text-sm mb-1">Filtering</div><div class="text-xs leading-snug">Script, length, repetition, safety and PII rules, then MinHash deduplication</div></div>
-<div class="box p-3"><div class="kicker">5</div><div class="font-bold text-sm mb-1">Splitting</div><div class="text-xs leading-snug">Train and validation sets, plus 135 refusal and redirect templates</div></div>
-</div>
-
-| Language | Generations | Kept | Train / validation |
+| Language | Generated | Kept | Train / validation |
 |---|---:|---:|---:|
 | Japanese | 15,320 | 10,257 (67 %) | 10,090 / 302 |
 | English | 7,640 | 6,705 (88 %) | 6,647 / 193 |
 
-<p class="cap">Table 3. Dataset sizes after filtering and deduplication.</p>
+<img src="../reports/figures/data_funnel.png" class="fig mt-3" style="max-height: 140px" alt="Data funnel for the Japanese and English datasets" />
 
 ---
 
-<p class="section">Data</p>
+<p class="section">Build</p>
 
-# Data filtering
-
-<img src="../reports/figures/data_funnel.png" class="fig" alt="Data funnel for the Japanese and English datasets" />
-
-<p class="cap"><b>Figure 1.</b> Synthetic data funnel. Rule filters remove most rejected stories; the cross-model labels remove a further 1–2 % of generations.</p>
-
----
-
-<p class="section">Training</p>
-
-# Training setup
+# Training
 
 <div class="grid grid-cols-2 gap-10 text-sm">
 <div>
 
-### Supervised fine-tuning
+### Fine-tuning (SFT)
 - LoRA r = 32, α = 64 on all language-model linear layers: 77.8M trainable parameters (0.97 %)
-- Loss on the assistant turn only, no packing
-- Learning rate 2e-4, cosine schedule, batch 16, one epoch
+- Loss on the answer only; learning rate 2e-4, batch 16, one epoch on one H100
+- More data helped more than a higher LoRA rank in the ablations
 
 </div>
 <div>
 
 ### Preference tuning (DPO)
-- Two SFT samples on each of 2,400 prompts, ranked by rules or by the teacher in both orders
-- English adds 135 refusal-preference pairs
-- Learning rate 2e-5, β = 0.1; frozen SFT adapter as reference
+- Two samples per prompt on 2,400 prompts, ranked by rules or by the teacher in both orders
+- English adds 135 pairs that prefer a refusal
+- Learning rate 2e-5, β = 0.1
 
 </div>
 </div>
 
-| Run | Data | Validation | GPU minutes (H100) |
+| Run | Data | Validation | GPU minutes |
 |---|---:|---:|---:|
 | Japanese SFT | 10,090 examples | loss 1.200 (ppl 3.32) | 40 |
 | English SFT | 6,647 examples | loss 1.184 (ppl 3.27) | 34 |
 | English DPO | 1,596 pairs | DPO loss 0.637 | 14 |
 
-<p class="cap">Table 4. Released training runs.</p>
-
----
-
-<p class="section">Training</p>
-
-# Training dynamics
-
-<img src="../reports/figures/sft_loss.png" class="fig" alt="SFT loss curves" />
-
-<p class="cap"><b>Figure 2.</b> SFT loss. Validation loss follows the training loss to the end of the epoch, with no sign of overfitting.</p>
-
----
-
-<p class="section">Training</p>
-
-# Ablations
-
-<img src="../reports/figures/ablations.png" class="fig" alt="Ablations on data share and LoRA rank" />
-
-<p class="cap"><b>Figure 3.</b> Japanese ablations. Validation loss falls with data (10 %, 30 %, 100 %: 1.364, 1.288, 1.200). At a fixed 25 % subset, rank 64 improves on rank 16 by only 0.036.</p>
+<p class="cap">The released runs. Live training curves for every run are on the site.</p>
 
 ---
 
 <p class="section">Evaluation</p>
 
-# Evaluation protocol
+# How it was tested
 
 <div class="grid grid-cols-2 gap-10">
 <div>
 
 ### Setup
-- 270 frozen prompts × 3 seeds per language
-- Identical decoding for every system: temperature 0.8, top-p 0.95
-- A separate policy suite with names and titles disjoint from training
-- Japanese baselines: base model, Qwen3.5-4B, Qwen3.5-9B, the 35B teacher
+- 270 held-out prompts × 3 seeds per language
+- Same decoding for every model: temperature 0.8, top-p 0.95
+- A separate safety suite with names and titles not seen in training
+- Japanese comparisons: the base model, Qwen3.5-4B, Qwen3.5-9B and the 35B teacher
 
 </div>
 <div>
 
-### Measures
-- Rule-based metrics: length, format, script, repetition, safety, refusals
-- Pairwise LLM judge (llm-jp-4-32b-a3b-thinking); a verdict counts only if both orders agree
-- Judge accuracy on known-answer pairs: 86.7 % (JP), 93.3 % (EN)
-- JGLUE via lm-eval, perplexity, and a train/test overlap audit
+### Checks
+- Automatic checks: length, format, script, repetition, safety and refusals
+- An LLM judge (llm-jp-4-32b-a3b-thinking) compares two stories in both orders; a verdict counts only if both agree
+- The judge was tested first on known answers: 86.7 % (JP), 93.3 % (EN)
+- JGLUE for general Japanese ability, and a check for copied training text
 
 </div>
 </div>
 
 ---
 
-<p class="section">Results</p>
+<p class="section">Evaluation</p>
 
-# Main results
+# Results
 
-| Metric | Base model | Kitsune |
+| Held-out test | Base model | Kitsune |
 |---|---:|---:|
-| Outputs within the requested length (JP / EN) ↑ | 0.4 % / 22 % | **50 % / 81 %** |
+| Stories within the requested length (JP / EN) ↑ | 0.4 % / 22 % | **50 % / 81 %** |
 | Outputs with markdown or meta text (JP / EN) ↓ | 76 % / 95 % | **0 % / 0 %** |
-| Degenerate outputs (JP / EN) ↓ | 17 % / 19 % | **0.5 % / 0 %** |
+| Broken or unfinished outputs (JP / EN) ↓ | 17 % / 19 % | **0.5 % / 0 %** |
 | Disallowed requests carried out (JP / EN) ↓ | 85 % / 79 % | **5 % / 0 %** |
 | Validation perplexity (JP / EN) ↓ | 6.67 / 7.59 | **3.31 / 3.27** |
 
-<p class="cap">Table 5. Base model against the released model for each language (Japanese SFT, English SFT + DPO). Test set: 270 prompts × 3 seeds; policy suite: 45 disallowed requests × 3 seeds.</p>
+<p class="cap">Kitsune is the released model for each language (Japanese SFT, English SFT + DPO). 270 prompts × 3 seeds; safety suite 45 × 3.</p>
+
+<p class="text-sm mt-4">General Japanese ability (four JGLUE tasks) shows no clear loss, and no Japanese test output copies a 32-character span from the training stories.</p>
 
 ---
 layout: two-cols
 ---
 
-<p class="section">Results</p>
+<p class="section">Evaluation</p>
 
-# Judge preference and output length
+# The judge and length
 
 - On full outputs, the judge prefers the base model: net −0.44 (JP) and −0.57 (EN)
-- The base model writes 1.7× longer (median 1,397 vs 828 characters), usually past the requested length
-- With both outputs cut to the same opening length, the preference disappears: +0.12 [−0.07, +0.32] (JP), −0.03 [−0.22, +0.15] (EN)
-- The base model's advantage is therefore mostly length that the request did not ask for
+- But the base model writes 1.7× longer (median 1,397 vs 828 characters), usually past the requested length
+- With both stories cut to the same opening length, the gap disappears: +0.12 [−0.07, +0.32] (JP), −0.03 [−0.22, +0.15] (EN)
+- So the base model's lead is mostly extra length that nobody asked for
 
 ::right::
 
 <div class="pl-6 pt-16">
 <img src="../reports/figures/judge_preference.png" class="fig" alt="Judge net preference with confidence intervals" />
-<p class="cap"><b>Figure 4.</b> Net preference with 95 % CIs. Grey: full outputs; diamonds: equal-length openings.</p>
+<p class="cap">Net preference with 95 % CIs. Grey: full outputs; diamonds: equal-length openings.</p>
 </div>
 
 ---
 
-<p class="section">Results</p>
+<p class="section">Evaluation</p>
 
-# Safety and preference tuning
+# Safety
 
-<img src="../reports/figures/safety.png" class="fig" style="max-height: 200px" alt="Outcomes on disallowed requests" />
+<img src="../reports/figures/safety.png" class="fig" style="max-height: 170px" alt="Outcomes on disallowed requests" />
 
-<p class="cap"><b>Figure 5.</b> Outcomes on held-out disallowed requests (45 prompts × 3 seeds per language).</p>
+<p class="cap">What each model does with held-out disallowed requests (45 prompts × 3 seeds per language).</p>
 
-- Quality-only DPO (Japanese) raised length adherence from 50 % to 67 % but lowered refusals from 75 % to 49 %
-- English DPO with 135 refusal pairs added 10 points of length adherence and kept violations at 0 %
-- Release rule: DPO ships only if violations stay within 5 points of SFT and the judge does not prefer SFT
+<div class="text-sm">
+
+- Japanese DPO on quality pairs alone improved length (50 % → 67 %) but cut refusals (75 % → 49 %), so the Japanese release stays SFT
+- English DPO with 135 refusal pairs kept 0 % violations and added 10 points of length adherence, so it ships
+- The release rule was written before any judge result: ship DPO only if safety holds and the judge does not prefer SFT
+
+</div>
 
 ---
 
-<p class="section">Results</p>
+<p class="section">Outlook</p>
 
-# General ability and memorisation
+# Limitations and next steps
 
 <div class="grid grid-cols-2 gap-10">
 <div>
 
-| JGLUE task | Base | Kitsune JP |
-|---|---:|---:|
-| JCommonsenseQA | 59.4 | 65.8 |
-| JNLI | 58.4 | 55.4 |
-| MARC-ja | 93.0 | 92.6 |
-| XWinograd | 68.8 | 65.6 |
-
-<p class="cap">Table 6. Accuracy on 500 items per task. One gain of about 2 SE; the other changes are within about 1 SE.</p>
+### Limitations
+- No human evaluation yet; quality rests on automatic checks and one LLM judge
+- The models inherit their generators' habits; the Japanese models lose clearly to the 35B teacher
+- Safety filters are word lists: they miss paraphrases and flag idioms
+- Titles that ask to drop fantasy are followed more often than by the base model
 
 </div>
 <div>
 
-### Memorisation audit
-- Japanese: no test output shares a 32-character span with the training stories
-- English: 1.6 % of 32-character windows appear in training (base model: 0.2 %)
-- One English output in 270 contains a span of more than 100 characters
-- The audit returns 100 % on a known positive
-
-</div>
-</div>
-
----
-
-<p class="section">Discussion</p>
-
-# Limitations
-
-- **No human evaluation.** Quality rests on rule-based metrics and one LLM judge, which is confounded by length
-- **Synthetic-data ceiling.** The models inherit their generators' habits; the Japanese models lose clearly to the 35B teacher
-- **Lexicon-based safety.** Filters miss paraphrases and flag idioms, so unsafe rates are upper bounds
-- **Adversarial titles.** A title that asks the model to drop fantasy is followed more often than by the base model
-- **Japanese DPO.** Preference tuning with refusal pairs was not run for Japanese; the Japanese release is SFT only
-- **Small ablations.** The rank comparison has two points at a single data size
-
----
-
-<p class="section">Discussion</p>
-
-# Future work
-
-- A small human preference study to calibrate the LLM judge
-- Japanese DPO with refusal-preference pairs, the recipe that worked in English
-- Adversarial-title examples in the training data
+### Next steps
+- A small human preference study
+- Japanese DPO with refusal pairs, the recipe that worked in English
+- Adversarial-title examples in training
 - A full LoRA rank sweep at the main data size
+
+</div>
+</div>
 
 ---
 
 <p class="section">Release</p>
 
-# Release and reproducibility
+# Try it
 
 <div class="grid grid-cols-2 gap-10">
 <div>
 
-### Artefacts
-- Merged bf16 weights for both models
-- GGUF Q4_K_M and Q8_0: 5.4 (JP) and 6.0 (EN) tokens/s on 8 CPU cores
-- LoRA adapters and both training datasets
-- A ZeroGPU demo and a Colab notebook
+### Use
+- Merged weights for both models on Hugging Face
+- GGUF Q4_K_M and Q8_0 files: 5.4 (JP) and 6.0 (EN) tokens/s on 8 CPU cores
+- A live demo on Hugging Face and a free Colab notebook
+- LoRA adapters and both datasets
 
 </div>
 <div>
 
-### Reproducibility
-- Every number in this deck is generated from `reports/`
+### Rebuild
+- Every number here comes from the `reports/` folder
 - `make eval` rebuilds every table and figure on a CPU
-- Each GPU step is a `make` target behind a budget guard
-- Total compute: $41.34
+- Every GPU step is a `make` target behind a budget check
 
 </div>
 </div>
 
----
-layout: center
----
-
-<p class="section text-center">Conclusion</p>
-
-# Conclusion
-
-<div class="text-left max-w-3xl mx-auto">
-
-- A 4B-effective model fine-tuned on filtered synthetic data follows genre, title, format and length far better than its base, and refuses disallowed requests
-- Prose quality is on par with the base model once length is controlled
-- Preference tuning needs explicit refusal pairs to avoid eroding safety
-
-</div>
-
-<div class="mt-10 text-sm text-center">
+<div class="mt-12 text-sm text-center">
 
 [Site](https://kitsune-tales-qwen.vercel.app) · [Code](https://github.com/whoashish115/kitsune-tales-qwen) · [Models](https://huggingface.co/collections/whoashish115/kitsune-tales-6abd4e61de4896bb86692bc1) · [Demo](https://huggingface.co/spaces/whoashish115/kitsune-tales) · [Report](https://github.com/whoashish115/kitsune-tales-qwen/blob/main/REPORT.md)
 
