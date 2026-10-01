@@ -68,7 +68,6 @@ def upload(jobs: list[tuple[str, str, list[str]]]) -> list[dict]:
 @app.local_entrypoint()
 def main() -> None:
     import json
-    from pathlib import Path
 
     from kitsune.gpu_jobs import ledger
 
@@ -76,5 +75,4 @@ def main() -> None:
         "8", "hf-upload-weights", "CPU", 0.5, 4, 8, notes="merged JP/EN, EN LoRA, 4 GGUF to private HF repos"
     ):
         res = upload.remote(JOBS)
-    Path("reports/hf_upload.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
     print(json.dumps(res, indent=1))

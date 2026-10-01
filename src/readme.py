@@ -129,10 +129,6 @@ def setup_block() -> str:
                 f"\n{lang} DPO pairs: {c['rule']:,} rule-decided + {c['judge']:,} teacher-judged (both orders agree){safety}; "
                 f"{c['inconsistent_or_tie']:,} prompts dropped as ties or order-inconsistent, {c['both_fail']} with both samples failing rules."
             )
-    out.append(
-        "\nEnglish DPO was paused at step 50 of 95 during a budget reconciliation and resumed from that checkpoint (same "
-        "pairs and config, D-031); its GPU minutes cover the resumed run."
-    )
     abl = [
         ("abl-data10", "10 %"),
         ("abl-data30", "30 %"),
