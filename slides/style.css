@@ -107,3 +107,14 @@
   white-space: pre-line;
   color: var(--k-ink);
 }
+
+/* Section label above each slide title (plain case, no letter-spacing). */
+.section {
+  font-size: 0.8rem;
+  color: var(--k-muted);
+  margin: 0 0 0.2rem;
+}
+
+.slidev-layout ol li {
+  margin-bottom: 0.5rem;
+}
