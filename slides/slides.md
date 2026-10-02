@@ -40,7 +40,7 @@ Two small open models that write original fantasy light-novel stories. You give 
 <div class="box p-4">
 
 ### Models
-`kitsune-tales-e4b-jp` (Japanese) and `kitsune-tales-e4b-en` (English with Japanese anime themes)
+`Kitsune-Tales-E4B-JP` (Japanese) and `Kitsune-Tales-E4B-EN` (English with Japanese anime themes)
 
 </div>
 <div class="box p-4">
@@ -287,30 +287,14 @@ layout: two-cols
 
 ---
 
-<p class="section">Outlook</p>
+<p class="section">Caveats</p>
 
-# Limitations and next steps
+# Limitations
 
-<div class="grid grid-cols-2 gap-10">
-<div>
-
-### Limitations
-- No human evaluation yet; quality rests on automatic checks and one LLM judge
+- No human evaluation; quality rests on automatic checks and one LLM judge
 - The models inherit their generators' habits; the Japanese models lose clearly to the 35B teacher
 - Safety filters are word lists: they miss paraphrases and flag idioms
 - Titles that ask to drop fantasy are followed more often than by the base model
-
-</div>
-<div>
-
-### Next steps
-- A small human preference study
-- Japanese DPO with refusal pairs, the recipe that worked in English
-- Adversarial-title examples in training
-- A full LoRA rank sweep at the main data size
-
-</div>
-</div>
 
 ---
 
@@ -340,6 +324,6 @@ layout: two-cols
 
 <div class="mt-12 text-sm text-center">
 
-[Site](https://kitsune-tales-qwen.vercel.app) · [Code](https://github.com/whoashish115/kitsune-tales-qwen) · [Models](https://huggingface.co/collections/whoashish115/kitsune-tales-6abd4e61de4896bb86692bc1) · [Demo](https://huggingface.co/spaces/whoashish115/kitsune-tales) · [Report](https://github.com/whoashish115/kitsune-tales-qwen/blob/main/REPORT.md)
+[Site](https://kitsune-tales-qwen.vercel.app) · [Code](https://github.com/whoashish115/kitsune-tales-qwen) · [Models](https://huggingface.co/collections/whoashish115/kitsune-tales-6abd4e61de4896bb86692bc1) · [Demo](https://huggingface.co/spaces/whoashish115/Kitsune-Tales) · [Report](https://github.com/whoashish115/kitsune-tales-qwen/blob/main/REPORT.md)
 
 </div>
