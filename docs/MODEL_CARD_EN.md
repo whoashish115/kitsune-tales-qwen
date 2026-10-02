@@ -6,7 +6,7 @@ language:
 library_name: transformers
 pipeline_tag: text-generation
 datasets:
-- whoashish115/kitsune-tales-en-fantasy-sft
+- whoashish115/Kitsune-Tales-EN-Fantasy-SFT
 tags:
 - lora
 - creative-writing
@@ -16,14 +16,14 @@ tags:
 - gemma4
 - synthetic-data
 model-index:
-- name: kitsune-tales-e4b-en
+- name: Kitsune-Tales-E4B-EN
   results:
   - task:
       type: text-generation
       name: English fantasy fiction generation
     dataset:
       name: Kitsune English held-out prompts (270 × 3 seeds)
-      type: whoashish115/kitsune-tales-en-fantasy-sft
+      type: whoashish115/Kitsune-Tales-EN-Fantasy-SFT
       split: test
     metrics:
     - type: length_adherence
@@ -49,15 +49,15 @@ model-index:
       value: -0.5667
 ---
 
-# Kitsune-Tales-E4B-EN (`kitsune-tales-e4b-en`)
+# Kitsune-Tales-E4B-EN (`Kitsune-Tales-E4B-EN`)
 
 An effective-4B model (Gemma 4 E4B: 7.52B stored / 4.62B effective parameters) that writes **original, general-audience fantasy
 light-novel fiction in English, with Japanese anime / light-novel themes**, from genre tags, a title and a format
 (synopsis / short story / continuation). It is a LoRA SFT + DPO fine-tune of [google/gemma-4-E4B-it](https://huggingface.co/google/gemma-4-E4B-it)
 (revision `ee0ef6023621`), trained on filtered, cross-labeled synthetic data from two Apache-2.0 models. It is the
-English sibling of [`kitsune-tales-e4b-jp`](https://huggingface.co/whoashish115/kitsune-tales-e4b-jp) and was trained with the same recipe.
+English sibling of [`Kitsune-Tales-E4B-JP`](https://huggingface.co/whoashish115/Kitsune-Tales-E4B-JP) and was trained with the same recipe.
 
-[GitHub](https://github.com/whoashish115/kitsune-tales-qwen) · [W&B](https://wandb.ai/whoashish115-base/kitsune-tales) · [Space](https://huggingface.co/spaces/whoashish115/kitsune-tales) · [Dataset](https://huggingface.co/datasets/whoashish115/kitsune-tales-en-fantasy-sft) · [GGUF](https://huggingface.co/whoashish115/kitsune-tales-e4b-en-gguf)
+[GitHub](https://github.com/whoashish115/kitsune-tales-qwen) · [W&B](https://wandb.ai/whoashish115-base/kitsune-tales) · [Space](https://huggingface.co/spaces/whoashish115/Kitsune-Tales) · [Dataset](https://huggingface.co/datasets/whoashish115/Kitsune-Tales-EN-Fantasy-SFT) · [GGUF](https://huggingface.co/whoashish115/Kitsune-Tales-E4B-EN-GGUF)
 
 ## Prompt format
 
@@ -70,7 +70,7 @@ For `continuation`, add `Passage:` followed by the text to continue. Use the cha
 
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
-repo = "whoashish115/kitsune-tales-e4b-en"
+repo = "whoashish115/Kitsune-Tales-E4B-EN"
 tok = AutoTokenizer.from_pretrained(repo)
 model = AutoModelForCausalLM.from_pretrained(repo, dtype="auto", device_map="auto")
 msgs = [{"role": "system", "content": "You write original, general-audience fantasy light novels in English, in the style of Japanese anime and web novels. Follow the requested genres, title and format. Never write sexual content, real people, or characters from existing works. Requests outside fantasy are rewritten as fantasy."},
@@ -86,7 +86,7 @@ Systems (all decoded identically: temperature 0.8, top-p 0.95, 3 seeds):
 
 - `base-en`: Gemma 4 E4B instruct, zero-shot (the base model)
 - `kitsune-en-sft`: LoRA SFT
-- `kitsune-en`: LoRA SFT + DPO (quality + safety pairs), **released as `kitsune-tales-e4b-en`**
+- `kitsune-en`: LoRA SFT + DPO (quality + safety pairs), **released as `Kitsune-Tales-E4B-EN`**
 
 ## Automatic metrics
 
@@ -131,14 +131,14 @@ All numbers are generated from `reports/` in the GitHub repo by `python -m kitsu
 - Writing **original, general-audience** fantasy fiction in English with Japanese anime / light-novel themes
   (synopses, short stories, continuations) from genre tags and a title, for hobby writing and brainstorming.
 - Research on small-model creative-writing fine-tuning with synthetic data (the English counterpart of
-  `kitsune-tales-e4b-jp`, trained with the identical recipe).
+  `Kitsune-Tales-E4B-JP`, trained with the identical recipe).
 
 ## Out-of-scope use
 - Sexual content of any kind; any sexualization of minors; real people; existing copyrighted characters or fan fiction;
   hateful content. The model is trained to refuse these, but refusals are not guaranteed. Use an input filter
   (the demo's is in `demo/app.py`).
 - Factual, medical, legal or financial use. The model writes fiction and will state false things confidently.
-- Non-fantasy genres (the model is trained to transpose them into fantasy). For Japanese output use `kitsune-tales-e4b-jp`.
+- Non-fantasy genres (the model is trained to transpose them into fantasy). For Japanese output use `Kitsune-Tales-E4B-JP`.
 
 ## Training data provenance
 Synthetic English stories from `Qwen/Qwen3.6-35B-A3B-FP8` and `google/gemma-4-26B-A4B-it` (both Apache-2.0), prompted with

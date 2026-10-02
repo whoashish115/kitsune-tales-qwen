@@ -85,7 +85,7 @@ _Filled from `reports/data/stats.json` and the plots in `reports/data/`: filter 
 
 ## English dataset
 
-`kitsune-tales-en-fantasy-sft` (D-024).
+`Kitsune-Tales-EN-Fantasy-SFT` (D-024).
 
 The English model's data comes from the same pipeline, with English-specific prompts, filters and labeler instructions
 (`src/en.py`). The genre taxonomy, schema (`language = "en"`) and split procedure are shared. Every number

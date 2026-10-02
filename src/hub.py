@@ -106,7 +106,7 @@ def merged_card(lang: str) -> str:
     lines = body.splitlines()
     body = "\n".join(line for line in lines if not line.startswith("[GitHub]("))
     head = _header(
-        "kitsune-tales-e4b-jp" if lang == "ja" else "kitsune-tales-e4b-en",
+        REPOS["jp" if lang == "ja" else "en"].split("/")[1],
         "Original fantasy light-novel fiction in Japanese. LoRA SFT of Gemma 4 E4B, merged to bf16."
         if lang == "ja"
         else "Original fantasy fiction in English with Japanese anime and light-novel themes. LoRA SFT + DPO of Gemma 4 E4B, merged to bf16.",
@@ -147,7 +147,7 @@ tags:
     )
     return f"""{front}
 
-{_header(f"kitsune-tales-e4b-{k}-lora", f"LoRA adapter (run `{run}`) behind [{REPOS[k]}]({HF}/{REPOS[k]}). The merged model card has the full evaluation.", lang)}
+{_header(REPOS[k + "-lora"].split("/")[1], f"LoRA adapter (run `{run}`) behind [{REPOS[k]}]({HF}/{REPOS[k]}). The merged model card has the full evaluation.", lang)}
 ## Adapter
 
 | | |
@@ -182,14 +182,9 @@ top-p 0.95, top-k 50 and repetition penalty 1.05.
 
 def gguf_card(lang: str) -> str:
     k = "jp" if lang == "ja" else "en"
-    g = (
-        _load(R / f"gguf_{'en' if lang == 'en' else 'jp'}.json")
-        if (R / f"gguf_{'en' if lang == 'en' else 'jp'}.json").exists()
-        else {}
-    )
-    files = g.get("files", {})
+    g = _load(R / f"gguf_{'dpo-en-main' if lang == 'en' else 'sft-main'}.json")
     rows = "\n".join(
-        f"| `{f}` | {v.get('gb', '')} GB | `{str(v.get('sha256', ''))[:16]}` |" for f, v in files.items()
+        f"| `{f}` | {v['bytes'] / 1e9:.2f} GB | `{v['sha256'][:16]}` |" for f, v in g["files"].items()
     )
     front = f"""---
 license: apache-2.0
@@ -207,7 +202,7 @@ tags:
 ---"""
     return f"""{front}
 
-{_header(f"kitsune-tales-e4b-{k}-gguf", f"llama.cpp GGUF quantizations of [{REPOS[k]}]({HF}/{REPOS[k]}), converted with llama.cpp commit `7fe450e` and smoke-tested on CPU.", lang)}
+{_header(REPOS[k + "-gguf"].split("/")[1], f"llama.cpp GGUF quantizations of [{REPOS[k]}]({HF}/{REPOS[k]}), converted with llama.cpp commit `7fe450e` and smoke-tested on CPU.", lang)}
 ## Files
 
 | File | Size | SHA-256 (prefix) |
@@ -220,7 +215,7 @@ were measured on the bf16 model, not on these files.
 ## Run
 
 ```bash
-llama-cli -m kitsune-tales-e4b-{k}-Q4_K_M.gguf -st --temp 0.8 --top-p 0.95 --top-k 50 --repeat-penalty 1.05 -n 900 -p "<prompt>"
+llama-cli -m {versions.model_slug(lang)}-Q4_K_M.gguf -st --temp 0.8 --top-p 0.95 --top-k 50 --repeat-penalty 1.05 -n 900 -p "<prompt>"
 ```
 
 The prompt is the Gemma 4 chat format with the system prompt from the merged model card:

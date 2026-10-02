@@ -5,7 +5,7 @@
 ## Abstract
 
 We fine-tune Gemma 4 E4B with bf16 LoRA to write original, general-audience fantasy fiction in three formats, in two
-languages. `kitsune-tales-e4b-jp` (Japanese; SFT, with a DPO experiment) is the main study. `kitsune-tales-e4b-en` (English with Japanese
+languages. `Kitsune-Tales-E4B-JP` (Japanese; SFT, with a DPO experiment) is the main study. `Kitsune-Tales-E4B-EN` (English with Japanese
 anime / light-novel themes; SFT, then DPO, with the identical recipe) tests whether the pipeline transfers to a second language.
 Both use only synthetic data from Apache-2.0 models, filtered by rule-based and cross-model LLM checks.
 We evaluate the Japanese model on 270 held-out prompts frozen before data generation, against the base model, Qwen3.5-4B
@@ -103,7 +103,7 @@ English DPO pairs: 293 rule-decided + 1,168 teacher-judged (both orders agree) +
 Systems (all decoded identically: temperature 0.8, top-p 0.95, 3 seeds):
 
 - `base`: Gemma 4 E4B instruct, zero-shot (the base model)
-- `kitsune-sft`: LoRA SFT, **released as `kitsune-tales-e4b-jp`**
+- `kitsune-sft`: LoRA SFT, **released as `Kitsune-Tales-E4B-JP`**
 - `kitsune`: LoRA SFT + DPO v2 (quality pairs only)
 - `qwen3.5-4b`: Qwen3.5-4B instruct, zero-shot
 - `qwen3.5-9b`: Qwen3.5-9B instruct, zero-shot
@@ -160,7 +160,7 @@ Systems (all decoded identically: temperature 0.8, top-p 0.95, 3 seeds):
 
 - `base-en`: Gemma 4 E4B instruct, zero-shot (the base model)
 - `kitsune-en-sft`: LoRA SFT
-- `kitsune-en`: LoRA SFT + DPO (quality + safety pairs), **released as `kitsune-tales-e4b-en`**
+- `kitsune-en`: LoRA SFT + DPO (quality + safety pairs), **released as `Kitsune-Tales-E4B-EN`**
 
 ## Automatic metrics
 
@@ -227,7 +227,7 @@ the model redirected disallowed requests into fantasy stories, and sometimes kep
 judge rated DPO v2 and SFT equal. Under the pre-registered rule, **the SFT model is released**. The preference data
 contained no refusal examples, and the English DPO adds safety pairs for exactly this reason.
 
-**English (`kitsune-tales-e4b-en`).** The same recipe transfers. SFT raises length adherence from 22 % to 71 % and
+**English (`Kitsune-Tales-E4B-EN`).** The same recipe transfers. SFT raises length adherence from 22 % to 71 % and
 removes markdown (95 % → 0 %) and degenerate outputs (19 % → 0 %). It refuses 93 % of held-out disallowed requests
 (base: 0 %) with 0 % policy violations (base: 79 %). Validation perplexity falls from 7.59 to 3.27. DPO with safety
 pairs adds 10 points of length adherence (81 %) and keeps 0 % violations. Its held-out preference accuracy is only

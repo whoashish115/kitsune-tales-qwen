@@ -58,10 +58,10 @@ P: dict[str, Any] = dict(THEMES["light"])
 LABEL = {
     "base": "Gemma 4 E4B (base)",
     "base-en": "Gemma 4 E4B (base)",
-    "kitsune-sft": "kitsune-tales-e4b-jp (SFT, released)",
+    "kitsune-sft": "Kitsune-Tales-E4B-JP (SFT, released)",
     "kitsune": "JP SFT + DPO v2 (not released)",
     "kitsune-en-sft": "EN SFT",
-    "kitsune-en": "kitsune-tales-e4b-en (SFT + DPO, released)",
+    "kitsune-en": "Kitsune-Tales-E4B-EN (SFT + DPO, released)",
     "qwen3.5-4b": "Qwen3.5-4B",
     "qwen3.5-9b": "Qwen3.5-9B",
     "teacher": "Teacher: Qwen3.6-35B-A3B",

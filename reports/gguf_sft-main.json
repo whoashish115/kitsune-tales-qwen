@@ -1,10 +1,10 @@
 {
   "files": {
-    "kitsune-tales-e4b-jp-Q4_K_M.gguf": {
+    "Kitsune-Tales-E4B-JP-Q4_K_M.gguf": {
       "bytes": 5302273952,
       "sha256": "dfbf740e69a5b6456de63d3ba2c2a3d9ae9e7b2c97958aff5085d9b4f31bb5c2"
     },
-    "kitsune-tales-e4b-jp-Q8_0.gguf": {
+    "Kitsune-Tales-E4B-JP-Q8_0.gguf": {
       "bytes": 7972726688,
       "sha256": "35b28562efaf746297af23fa3d82b16e214b49ad18bf9cd5a4ca92c6ee991d89"
     }

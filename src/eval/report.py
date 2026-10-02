@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+from kitsune import versions
 from kitsune.data.policy import is_redirect, is_refusal
 from kitsune.eval.judge import combine
 from kitsune.eval.metrics import bootstrap_ci, distinct_n, output_metrics, paired_bootstrap_diff, self_bleu
@@ -398,7 +399,7 @@ def legend(lang: str, systems: Sequence[str]) -> str:
     import yaml
 
     rel = yaml.safe_load(Path("configs/release.yaml").read_text(encoding="utf-8"))[lang]["system"]
-    slug = "kitsune-tales-e4b-" + ("en" if lang == "en" else "jp")
+    slug = versions.model_slug("en" if lang == "en" else "ja")
     rows = [
         f"- `{s}`: {SYSTEM_NOTES.get(s, s)}" + (f", **released as `{slug}`**" if s == rel else "")
         for s in systems

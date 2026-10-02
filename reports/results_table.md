@@ -1,7 +1,7 @@
 Systems (all decoded identically: temperature 0.8, top-p 0.95, 3 seeds):
 
 - `base`: Gemma 4 E4B instruct, zero-shot (the base model)
-- `kitsune-sft`: LoRA SFT, **released as `kitsune-tales-e4b-jp`**
+- `kitsune-sft`: LoRA SFT, **released as `Kitsune-Tales-E4B-JP`**
 - `kitsune`: LoRA SFT + DPO v2 (quality pairs only)
 - `qwen3.5-4b`: Qwen3.5-4B instruct, zero-shot
 - `qwen3.5-9b`: Qwen3.5-9B instruct, zero-shot

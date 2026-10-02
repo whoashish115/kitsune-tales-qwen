@@ -36,7 +36,7 @@ bake-off is a screen (n = 12); the proper comparison is in the main evaluation, 
 
 Gemma 4 E4B stores 7.52B parameters (3.95B in transformer layers, 0.67B tied embeddings, 2.90B per-layer embedding
 tables that cost almost no compute) and computes like a 4.62B model, hence "E4B" and the model names
-`kitsune-tales-e4b-jp` / `kitsune-tales-e4b-en`. Thinking is off by default; `<turn|>` ends a turn; tokenization gives
+`Kitsune-Tales-E4B-JP` / `Kitsune-Tales-E4B-EN`. Thinking is off by default; `<turn|>` ends a turn; tokenization gives
 1.43 Japanese characters per token.
 
 ## D-002: LoRA precision
@@ -164,7 +164,7 @@ translations that keep the model's mistakes.
 
 *Also D-026.*
 
-`kitsune-tales-e4b-en` writes English fantasy with Japanese anime and light-novel themes. It shares the taxonomy,
+`Kitsune-Tales-E4B-EN` writes English fantasy with Japanese anime and light-novel themes. It shares the taxonomy,
 schema, filter design, training recipe (only data and system prompt differ), DPO recipe and evaluation protocol with
 the Japanese model: 270 frozen prompts × 3 seeds, the 72-prompt policy suite, 150 judged pairs per comparison and 60
 validation pairs. Lengths are counted in words. Before filtering, overused invented names are rebalanced from
@@ -187,8 +187,8 @@ English SFT + DPO has 0 % violations.
 
 The release rule was fixed before any judge result was seen: SFT + DPO is released only if (a) its violation rate is
 at most SFT's + 5 points and (b) the judge's net-preference CI against SFT does not lie entirely below 0. Japanese DPO
-v2 fails (a), so `kitsune-tales-e4b-jp` is the SFT model and DPO v2 is reported as an experiment. English SFT + DPO
-passes both and is released as `kitsune-tales-e4b-en`.
+v2 fails (a), so `Kitsune-Tales-E4B-JP` is the SFT model and DPO v2 is reported as an experiment. English SFT + DPO
+passes both and is released as `Kitsune-Tales-E4B-EN`.
 
 ## D-032: Length-controlled judging
 

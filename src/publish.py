@@ -1,7 +1,7 @@
 """Model card generation and Hugging Face publishing.
 
-    python -m kitsune.publish card                 # docs/MODEL_CARD.md    (kitsune-tales-e4b-jp) from reports/results.json
-    python -m kitsune.publish card --lang en       # docs/MODEL_CARD_EN.md (kitsune-tales-e4b-en) from reports/results_en.json
+    python -m kitsune.publish card                 # docs/MODEL_CARD.md    (Kitsune-Tales-E4B-JP) from reports/results.json
+    python -m kitsune.publish card --lang en       # docs/MODEL_CARD_EN.md (Kitsune-Tales-E4B-EN) from reports/results_en.json
 
 Every number in a card comes from its results file; the ``model-index`` block mirrors it.
 Repos are created private first; making them public is a separate, manual step.
@@ -100,13 +100,13 @@ def model_index(results: dict[str, Any], system: str = "kitsune") -> list[dict]:
 INTENDED_EN = """- Writing **original, general-audience** fantasy fiction in English with Japanese anime / light-novel themes
   (synopses, short stories, continuations) from genre tags and a title, for hobby writing and brainstorming.
 - Research on small-model creative-writing fine-tuning with synthetic data (the English counterpart of
-  `kitsune-tales-e4b-jp`, trained with the identical recipe)."""
+  `Kitsune-Tales-E4B-JP`, trained with the identical recipe)."""
 
 OUT_OF_SCOPE_EN = """- Sexual content of any kind; any sexualization of minors; real people; existing copyrighted characters or fan fiction;
   hateful content. The model is trained to refuse these, but refusals are not guaranteed. Use an input filter
   (the demo's is in `demo/app.py`).
 - Factual, medical, legal or financial use. The model writes fiction and will state false things confidently.
-- Non-fantasy genres (the model is trained to transpose them into fantasy). For Japanese output use `kitsune-tales-e4b-jp`."""
+- Non-fantasy genres (the model is trained to transpose them into fantasy). For Japanese output use `Kitsune-Tales-E4B-JP`."""
 
 LIMITATIONS_EN = """- **Smaller dataset than the Japanese model:** 6,647 English training examples vs 10,090 Japanese.
 - **Name debiasing.** The generators overused a few default names ("Elara" appeared in 67 % of one generator's first

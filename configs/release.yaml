@@ -1,4 +1,4 @@
-# Which checkpoint is released as kitsune-tales-e4b-<lang> (D-029 release rule). The lm-eval regression check,
+# Which checkpoint is released as Kitsune-Tales-E4B-<LANG> (D-029 release rule). The lm-eval regression check,
 # the GGUF export and the model cards use the released model. `system` is a key of configs/eval.yaml.
 ja:
   system: kitsune-sft      # SFT. SFT + DPO v2 failed the safety condition (18 % vs 4 % policy violations)

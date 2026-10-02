@@ -1,8 +1,8 @@
 """Kitsune Tales playground (Hugging Face Space, free CPU tier): two 4-bit GGUF models via llama.cpp, plus galleries.
 
 Two models, one per language (D-024), chosen by the tab:
-    日本語  → kitsune-tales-e4b-jp  (original Japanese fantasy light novels)
-    English → kitsune-tales-e4b-en  (English fantasy with Japanese anime / light-novel themes)
+    日本語  → Kitsune-Tales-E4B-JP  (original Japanese fantasy light novels)
+    English → Kitsune-Tales-E4B-EN  (English fantasy with Japanese anime / light-novel themes)
 
 Costs nothing to run: the models run on the Space's own CPU and each loads on first use. Live generation
 is slow (a few tokens/s on 2 vCPU), so the gallery tabs always work instantly.

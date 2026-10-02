@@ -19,7 +19,7 @@
    "github": "https://github.com/whoashish115/kitsune-tales-qwen",
    "wandb": "https://wandb.ai/whoashish115-base/kitsune-tales",
    "collection": "https://huggingface.co/collections/whoashish115/kitsune-tales-6abd4e61de4896bb86692bc1",
-   "space": "https://huggingface.co/spaces/whoashish115/kitsune-tales",
+   "space": "https://huggingface.co/spaces/whoashish115/Kitsune-Tales",
    "author": {
     "name": "Ashish Kumar",
     "github": "https://github.com/whoashish115",
@@ -27,30 +27,30 @@
    },
    "models": {
     "jp": {
-     "merged": "https://huggingface.co/whoashish115/kitsune-tales-e4b-jp",
-     "lora": "https://huggingface.co/whoashish115/kitsune-tales-e4b-jp-lora",
-     "gguf": "https://huggingface.co/whoashish115/kitsune-tales-e4b-jp-gguf"
+     "merged": "https://huggingface.co/whoashish115/Kitsune-Tales-E4B-JP",
+     "lora": "https://huggingface.co/whoashish115/Kitsune-Tales-E4B-JP-LoRA",
+     "gguf": "https://huggingface.co/whoashish115/Kitsune-Tales-E4B-JP-GGUF"
     },
     "en": {
-     "merged": "https://huggingface.co/whoashish115/kitsune-tales-e4b-en",
-     "lora": "https://huggingface.co/whoashish115/kitsune-tales-e4b-en-lora",
-     "gguf": "https://huggingface.co/whoashish115/kitsune-tales-e4b-en-gguf"
+     "merged": "https://huggingface.co/whoashish115/Kitsune-Tales-E4B-EN",
+     "lora": "https://huggingface.co/whoashish115/Kitsune-Tales-E4B-EN-LoRA",
+     "gguf": "https://huggingface.co/whoashish115/Kitsune-Tales-E4B-EN-GGUF"
     }
    },
    "datasets": {
-    "jp": "https://huggingface.co/datasets/whoashish115/kitsune-tales-jp-fantasy-sft",
-    "en": "https://huggingface.co/datasets/whoashish115/kitsune-tales-en-fantasy-sft"
+    "jp": "https://huggingface.co/datasets/whoashish115/Kitsune-Tales-JP-Fantasy-SFT",
+    "en": "https://huggingface.co/datasets/whoashish115/Kitsune-Tales-EN-Fantasy-SFT"
    }
   },
   "models": [
    {
-    "slug": "kitsune-tales-e4b-jp",
+    "slug": "Kitsune-Tales-E4B-JP",
     "lang": "ja",
     "release_system": "kitsune-sft",
     "recipe": "SFT"
    },
    {
-    "slug": "kitsune-tales-e4b-en",
+    "slug": "Kitsune-Tales-E4B-EN",
     "lang": "en",
     "release_system": "kitsune-en",
     "recipe": "SFT + DPO"
@@ -4238,11 +4238,11 @@
  "gguf": {
   "jp": {
    "files": {
-    "kitsune-tales-e4b-jp-Q4_K_M.gguf": {
+    "Kitsune-Tales-E4B-JP-Q4_K_M.gguf": {
      "gb": 5.3,
      "sha256": "dfbf740e69a5b6456de63d3ba2c2a3d9ae9e7b2c97958aff5085d9b4f31bb5c2"
     },
-    "kitsune-tales-e4b-jp-Q8_0.gguf": {
+    "Kitsune-Tales-E4B-JP-Q8_0.gguf": {
      "gb": 7.97,
      "sha256": "35b28562efaf746297af23fa3d82b16e214b49ad18bf9cd5a4ca92c6ee991d89"
     }
@@ -4252,11 +4252,11 @@
   },
   "en": {
    "files": {
-    "kitsune-tales-e4b-en-Q4_K_M.gguf": {
+    "Kitsune-Tales-E4B-EN-Q4_K_M.gguf": {
      "gb": 5.3,
      "sha256": "e47950597c08a4794a8f1c8e3b9e72d0f528ebfe0c5a24cf3e31ef7961825fd2"
     },
-    "kitsune-tales-e4b-en-Q8_0.gguf": {
+    "Kitsune-Tales-E4B-EN-Q8_0.gguf": {
      "gb": 7.97,
      "sha256": "5171a3fb4165b367a793041cbf6c00ab04c4746afa8818e90bcfc95dcad6d326"
     }

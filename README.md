@@ -7,8 +7,8 @@
 <p align="center">
 <a href="https://kitsune-tales-qwen.vercel.app"><b>Site</b></a> ·
 <a href="https://kitsune-tales-qwen.vercel.app/slides/">Slides</a> ·
-<a href="https://huggingface.co/whoashish115/kitsune-tales-e4b-jp">JP model</a> ·
-<a href="https://huggingface.co/whoashish115/kitsune-tales-e4b-en">EN model</a> ·
+<a href="https://huggingface.co/whoashish115/Kitsune-Tales-E4B-JP">JP model</a> ·
+<a href="https://huggingface.co/whoashish115/Kitsune-Tales-E4B-EN">EN model</a> ·
 <a href="REPORT.md">Report</a> ·
 <a href="https://wandb.ai/whoashish115-base/kitsune-tales">W&amp;B</a>
 </p>
@@ -28,8 +28,8 @@ a safety suite, JGLUE and a memorization audit. Everything ran for $41.34 of GPU
 
 | Model | Writes | Recipe | Weights | LoRA | GGUF | Data |
 |---|---|---|---|---|---|---|
-| **kitsune-tales-e4b-jp** | Japanese light-novel prose | SFT | [bf16](https://huggingface.co/whoashish115/kitsune-tales-e4b-jp) | [adapter](https://huggingface.co/whoashish115/kitsune-tales-e4b-jp-lora) | [Q4_K_M, Q8_0](https://huggingface.co/whoashish115/kitsune-tales-e4b-jp-gguf) | [10,090 examples](https://huggingface.co/datasets/whoashish115/kitsune-tales-jp-fantasy-sft) |
-| **kitsune-tales-e4b-en** | English prose, Japanese anime themes | SFT + DPO | [bf16](https://huggingface.co/whoashish115/kitsune-tales-e4b-en) | [adapter](https://huggingface.co/whoashish115/kitsune-tales-e4b-en-lora) | [Q4_K_M, Q8_0](https://huggingface.co/whoashish115/kitsune-tales-e4b-en-gguf) | [6,647 examples](https://huggingface.co/datasets/whoashish115/kitsune-tales-en-fantasy-sft) |
+| **Kitsune-Tales-E4B-JP** | Japanese light-novel prose | SFT | [bf16](https://huggingface.co/whoashish115/Kitsune-Tales-E4B-JP) | [adapter](https://huggingface.co/whoashish115/Kitsune-Tales-E4B-JP-LoRA) | [Q4_K_M, Q8_0](https://huggingface.co/whoashish115/Kitsune-Tales-E4B-JP-GGUF) | [10,090 examples](https://huggingface.co/datasets/whoashish115/Kitsune-Tales-JP-Fantasy-SFT) |
+| **Kitsune-Tales-E4B-EN** | English prose, Japanese anime themes | SFT + DPO | [bf16](https://huggingface.co/whoashish115/Kitsune-Tales-E4B-EN) | [adapter](https://huggingface.co/whoashish115/Kitsune-Tales-E4B-EN-LoRA) | [Q4_K_M, Q8_0](https://huggingface.co/whoashish115/Kitsune-Tales-E4B-EN-GGUF) | [6,647 examples](https://huggingface.co/datasets/whoashish115/Kitsune-Tales-EN-Fantasy-SFT) |
 
 Both share the recipe: LoRA r = 32, α = 64 on every linear layer of the language model (77.8M
 trainable parameters, 0.97 %), bf16, one epoch, one H100.
@@ -94,7 +94,7 @@ Nine logged runs (pilot, four ablations, two SFT, two DPO), all on [W&B](https:/
 
 15,320 Japanese and 7,640 English generations from Qwen3.6-35B-A3B and
 Gemma 4 26B-A4B (both Apache-2.0); each model labels the other's stories. Datasets:
-[kitsune-tales-jp-fantasy-sft](https://huggingface.co/datasets/whoashish115/kitsune-tales-jp-fantasy-sft) and [kitsune-tales-en-fantasy-sft](https://huggingface.co/datasets/whoashish115/kitsune-tales-en-fantasy-sft); details in
+[Kitsune-Tales-JP-Fantasy-SFT](https://huggingface.co/datasets/whoashish115/Kitsune-Tales-JP-Fantasy-SFT) and [Kitsune-Tales-EN-Fantasy-SFT](https://huggingface.co/datasets/whoashish115/Kitsune-Tales-EN-Fantasy-SFT); details in
 [docs/DATA_CARD.md](docs/DATA_CARD.md).
 
 <p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="reports/figures/dark/data_funnel.svg"><img src="reports/figures/data_funnel.png" alt="Data funnel" width="100%"></picture><br><sub>From generations to training examples.</sub></p>
@@ -106,7 +106,7 @@ Gemma 4 26B-A4B (both Apache-2.0); each model labels the other's stories. Datase
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-repo = "whoashish115/kitsune-tales-e4b-en"   # or whoashish115/kitsune-tales-e4b-jp
+repo = "whoashish115/Kitsune-Tales-E4B-EN"   # or whoashish115/Kitsune-Tales-E4B-JP
 tok = AutoTokenizer.from_pretrained(repo)
 model = AutoModelForCausalLM.from_pretrained(repo, torch_dtype="bfloat16", device_map="auto")
 messages = [
@@ -120,7 +120,7 @@ print(tok.decode(out[0, ids.shape[1]:], skip_special_tokens=True))
 
 On a laptop CPU, use the 4-bit GGUF with llama.cpp (5.4 tok/s JP, 6.0 tok/s EN on 8 cores).
 The playground runs both models with every sampling control: live in the
-[Space](https://huggingface.co/spaces/whoashish115/kitsune-tales) (ZeroGPU), free in Colab
+[Space](https://huggingface.co/spaces/whoashish115/Kitsune-Tales) (ZeroGPU), free in Colab
 ([notebooks/playground.ipynb](notebooks/playground.ipynb)), or locally with `uv run python demo/app.py`.
 
 ## Repository layout

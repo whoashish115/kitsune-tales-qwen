@@ -54,7 +54,8 @@ LANG_SUFFIX: dict[str, str] = {"ja": "jp", "en": "en"}
 
 
 def model_slug(lang: str = "ja") -> str:
-    return f"kitsune-tales-e4b-{LANG_SUFFIX[lang]}"
+    # Same as the display name: Hub repos, GGUF files and run names all use Kitsune-Tales-E4B-JP / -EN.
+    return model_name(lang)
 
 
 def model_name(lang: str = "ja") -> str:
@@ -62,20 +63,21 @@ def model_name(lang: str = "ja") -> str:
 
 
 MODEL_NAME = model_name("ja")  # Kitsune-Tales-E4B-JP
-MODEL_SLUG = model_slug("ja")  # kitsune-tales-e4b-jp
+MODEL_SLUG = model_slug("ja")  # Kitsune-Tales-E4B-JP
 MODEL_NAME_EN = model_name("en")  # Kitsune-Tales-E4B-EN
-MODEL_SLUG_EN = model_slug("en")  # kitsune-tales-e4b-en
+MODEL_SLUG_EN = model_slug("en")  # Kitsune-Tales-E4B-EN
 WANDB_PROJECT = "kitsune-tales"
 HF_NAMESPACE = "whoashish115"
-HF_MODEL_REPO = f"{HF_NAMESPACE}/{MODEL_SLUG}"
-HF_ADAPTER_REPO = f"{HF_NAMESPACE}/{MODEL_SLUG}-lora"
-HF_GGUF_REPO = f"{HF_NAMESPACE}/{MODEL_SLUG}-gguf"
-HF_DATASET_REPO = f"{HF_NAMESPACE}/kitsune-tales-jp-fantasy-sft"
-HF_MODEL_REPO_EN = f"{HF_NAMESPACE}/{MODEL_SLUG_EN}"
-HF_ADAPTER_REPO_EN = f"{HF_NAMESPACE}/{MODEL_SLUG_EN}-lora"
-HF_GGUF_REPO_EN = f"{HF_NAMESPACE}/{MODEL_SLUG_EN}-gguf"
-HF_DATASET_REPO_EN = f"{HF_NAMESPACE}/kitsune-tales-en-fantasy-sft"
-HF_SPACE_REPO = f"{HF_NAMESPACE}/kitsune-tales"
+# Hub repos use the display casing (Moonfrost convention): Kitsune-Tales-E4B-JP, -LoRA, -GGUF.
+HF_MODEL_REPO = f"{HF_NAMESPACE}/{MODEL_NAME}"
+HF_ADAPTER_REPO = f"{HF_NAMESPACE}/{MODEL_NAME}-LoRA"
+HF_GGUF_REPO = f"{HF_NAMESPACE}/{MODEL_NAME}-GGUF"
+HF_DATASET_REPO = f"{HF_NAMESPACE}/Kitsune-Tales-JP-Fantasy-SFT"
+HF_MODEL_REPO_EN = f"{HF_NAMESPACE}/{MODEL_NAME_EN}"
+HF_ADAPTER_REPO_EN = f"{HF_NAMESPACE}/{MODEL_NAME_EN}-LoRA"
+HF_GGUF_REPO_EN = f"{HF_NAMESPACE}/{MODEL_NAME_EN}-GGUF"
+HF_DATASET_REPO_EN = f"{HF_NAMESPACE}/Kitsune-Tales-EN-Fantasy-SFT"
+HF_SPACE_REPO = f"{HF_NAMESPACE}/Kitsune-Tales"
 
 # llama.cpp release v0.5.0 (2026-09-23); registers Qwen3_5ForCausalLM in conversion/qwen.py.
 LLAMA_CPP_COMMIT = "7fe450e19305b828c199d602c23a8337aaa1f03b"

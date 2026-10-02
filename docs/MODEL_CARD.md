@@ -6,7 +6,7 @@ language:
 library_name: transformers
 pipeline_tag: text-generation
 datasets:
-- whoashish115/kitsune-tales-jp-fantasy-sft
+- whoashish115/Kitsune-Tales-JP-Fantasy-SFT
 tags:
 - lora
 - japanese
@@ -16,14 +16,14 @@ tags:
 - gemma4
 - synthetic-data
 model-index:
-- name: kitsune-tales-e4b-jp
+- name: Kitsune-Tales-E4B-JP
   results:
   - task:
       type: text-generation
       name: Japanese fantasy fiction generation
     dataset:
       name: Kitsune held-out prompts (270 × 3 seeds)
-      type: whoashish115/kitsune-tales-jp-fantasy-sft
+      type: whoashish115/Kitsune-Tales-JP-Fantasy-SFT
       split: test
     metrics:
     - type: length_adherence
@@ -49,7 +49,7 @@ model-index:
       value: -0.4414
 ---
 
-# Kitsune-Tales-E4B-JP (`kitsune-tales-e4b-jp`)
+# Kitsune-Tales-E4B-JP (`Kitsune-Tales-E4B-JP`)
 
 An effective-4B model (Gemma 4 E4B: 7.52B stored / 4.62B effective parameters) that writes **original, general-audience Japanese fantasy light-novel fiction** from genre tags,
 a title and a format (あらすじ / 短編 / 続き). It is a LoRA SFT fine-tune of [google/gemma-4-E4B-it](https://huggingface.co/google/gemma-4-E4B-it)
@@ -57,7 +57,7 @@ a title and a format (あらすじ / 短編 / 続き). It is a LoRA SFT fine-tun
 
 **Why SFT and not SFT + DPO.** A DPO stage on the model's own samples (1,709 rule and teacher-judged pairs) was trained and evaluated (`kitsune` in the tables below). The judge rated it level with SFT (net preference +0.00), and it followed length requests better. But its policy-violation rate on held-out disallowed requests was 20.7 %, against 5.2 % for SFT: the preference data had no refusal pairs. A release rule fixed before the judge results (D-029) therefore ships the SFT model.
 
-[GitHub](https://github.com/whoashish115/kitsune-tales-qwen) · [W&B](https://wandb.ai/whoashish115-base/kitsune-tales) · [Space](https://huggingface.co/spaces/whoashish115/kitsune-tales) · [Dataset](https://huggingface.co/datasets/whoashish115/kitsune-tales-jp-fantasy-sft) · [GGUF](https://huggingface.co/whoashish115/kitsune-tales-e4b-jp-gguf)
+[GitHub](https://github.com/whoashish115/kitsune-tales-qwen) · [W&B](https://wandb.ai/whoashish115-base/kitsune-tales) · [Space](https://huggingface.co/spaces/whoashish115/Kitsune-Tales) · [Dataset](https://huggingface.co/datasets/whoashish115/Kitsune-Tales-JP-Fantasy-SFT) · [GGUF](https://huggingface.co/whoashish115/Kitsune-Tales-E4B-JP-GGUF)
 
 ## Prompt format
 
@@ -70,7 +70,7 @@ For `続き` (continuation), add `本文:` followed by the passage. Use the chat
 
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
-repo = "whoashish115/kitsune-tales-e4b-jp"
+repo = "whoashish115/Kitsune-Tales-E4B-JP"
 tok = AutoTokenizer.from_pretrained(repo)
 model = AutoModelForCausalLM.from_pretrained(repo, dtype="auto", device_map="auto")
 msgs = [{"role": "system", "content": "あなたは全年齢向けのオリジナル・ファンタジー小説を書く作家です。"},
@@ -85,7 +85,7 @@ print(tok.decode(out[0, ids.shape[1]:], skip_special_tokens=True))
 Systems (all decoded identically: temperature 0.8, top-p 0.95, 3 seeds):
 
 - `base`: Gemma 4 E4B instruct, zero-shot (the base model)
-- `kitsune-sft`: LoRA SFT, **released as `kitsune-tales-e4b-jp`**
+- `kitsune-sft`: LoRA SFT, **released as `Kitsune-Tales-E4B-JP`**
 - `kitsune`: LoRA SFT + DPO v2 (quality pairs only)
 - `qwen3.5-4b`: Qwen3.5-4B instruct, zero-shot
 - `qwen3.5-9b`: Qwen3.5-9B instruct, zero-shot
